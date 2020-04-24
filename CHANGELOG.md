@@ -1,6 +1,12 @@
 # Changelog
-All notable changes to this project will be documented in this file.  
+All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.22.0](https://github.com/shyiko/mysql-binlog-connector-java/compare/0.20.0...0.22.9) - 2020-04-24
+
+- master server id is exposed in the library https://github.com/shyiko/mysql-binlog-connector-java/pull/319
+- Fixes for JSON data in mysql 8.0.16+ https://github.com/shyiko/mysql-binlog-connector-java/pull/288
+- more fixes for the bizarre azure platform https://github.com/shyiko/mysql-binlog-connector-java/pull/275
 
 ## [0.20.1](https://github.com/shyiko/mysql-binlog-connector-java/compare/0.20.0...0.20.1) - 2019-05-12
 
