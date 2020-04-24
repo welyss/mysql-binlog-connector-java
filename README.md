@@ -216,6 +216,17 @@ cd mysql-binlog-connector-java
 mvn # shows how to build, test, etc. project
 ```
 
+## Deployment
+
+First:
+http://maven.apache.org/guides/mini/guide-encryption.html
+
+Secondly:
+```
+    export OSS_SONATYPE_ORG_USERNAME=username
+    export OSS_SONATYPE_ORG_PASSWORD={encryptedpasswordJF!#$flkj}
+```
+
 ## Contributing
 
 In lieu of a formal styleguide, please take care to maintain the existing coding style.  
