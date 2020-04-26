@@ -42,7 +42,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.FilterInputStream;
@@ -62,6 +61,7 @@ import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.AbstractMap;
+import java.util.Base64;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.List;
@@ -323,7 +323,7 @@ public class BinaryLogClientIntegrationTest {
         assertEquals(writeAndCaptureRow("binary", "x'01'"), new Serializable[]{new byte[] {1}});
         assertEquals(writeAndCaptureRow("binary", "x'FF'"), new Serializable[]{new byte[] {-1}});
         assertEquals(writeAndCaptureRow("binary(16)", "unhex(md5(\"glob\"))"),
-            new Serializable[]{DatatypeConverter.parseHexBinary("8684147451a6cc3b92142c6f4b78e61c")});
+            new Serializable[]{Base64.getDecoder().decode("hoQUdFGmzDuSFCxvS3jmHA==")});
     }
 
     @Test
