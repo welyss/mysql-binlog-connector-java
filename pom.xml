@@ -73,6 +73,18 @@
             <version>8.0.15</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.9.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.10.3</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <reporting>
@@ -143,48 +155,6 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!--
-                unfortunately net.ju-n.maven.plugins:vagrant-maven-plugin does not support vagrant 1.1+
-                at the moment, so I'm gonna use exec-maven-plugin instead
-            -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.1.1</version>
-                <executions>
-                    <execution>
-                        <id>start-vagrant-vm</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${vagrant.integration.box}</workingDirectory>
-                            <executable>${vagrant.bin}</executable>
-                            <arguments>
-                                <argument>up</argument>
-                            </arguments>
-                            <skip>${skipTests}</skip>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>destroy-vagrant-vm</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <workingDirectory>${vagrant.integration.box}</workingDirectory>
-                            <executable>${vagrant.bin}</executable>
-                            <arguments>
-                                <argument>destroy</argument>
-                                <argument>--force</argument>
-                            </arguments>
-                            <skip>${skipTests}</skip>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

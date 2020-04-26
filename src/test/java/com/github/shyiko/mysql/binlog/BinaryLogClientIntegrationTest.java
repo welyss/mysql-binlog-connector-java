@@ -114,14 +114,15 @@ public class BinaryLogClientIntegrationTest {
     @BeforeClass
     public void setUp() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-        ResourceBundle bundle = ResourceBundle.getBundle("jdbc");
-        String prefix = "jdbc.mysql.replication.";
-        master = new MySQLConnection(bundle.getString(prefix + "master.hostname"),
-                Integer.parseInt(bundle.getString(prefix + "master.port")),
-                bundle.getString(prefix + "master.username"), bundle.getString(prefix + "master.password"));
-        slave = new MySQLConnection(bundle.getString(prefix + "slave.hostname"),
-                Integer.parseInt(bundle.getString(prefix + "slave.port")),
-                bundle.getString(prefix + "slave.superUsername"), bundle.getString(prefix + "slave.superPassword"));
+        MysqlOnetimeServer masterServer = new MysqlOnetimeServer();
+        MysqlOnetimeServer slaveServer = new MysqlOnetimeServer();
+        masterServer.boot();
+        slaveServer.boot();
+        slaveServer.setupSlave(masterServer.getPort());
+
+        master = new MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
+        slave = new MySQLConnection("127.0.0.1", slaveServer.getPort(), "root", "");
+
         client = new BinaryLogClient(slave.hostname, slave.port, slave.username, slave.password);
         EventDeserializer eventDeserializer = new EventDeserializer();
         eventDeserializer.setCompatibilityMode(CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY,
@@ -1022,7 +1023,7 @@ public class BinaryLogClientIntegrationTest {
             public void onEvent(Event event) {
                 if (event.getHeader().getEventType() == EventType.QUERY) {
                     EventData data = event.getData();
-                    if (data != null && ((QueryEventData) data).getSql().contains("_EOS_marker")) {
+                    if (data != null && ((QueryEventData) data).getSql().toLowerCase().contains("_eos_marker")) {
                         latch.countDown();
                     }
                 }

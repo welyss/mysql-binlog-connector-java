@@ -19,6 +19,7 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogClientIntegrationTest;
 import com.github.shyiko.mysql.binlog.CapturingEventListener;
 import com.github.shyiko.mysql.binlog.CountDownEventListener;
+import com.github.shyiko.mysql.binlog.MysqlOnetimeServer;
 import com.github.shyiko.mysql.binlog.TraceEventListener;
 import com.github.shyiko.mysql.binlog.TraceLifecycleListener;
 import com.github.shyiko.mysql.binlog.event.Event;
@@ -37,7 +38,6 @@ import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -69,11 +69,12 @@ public class JsonBinaryValueIntegrationTest {
     @BeforeClass
     public void setUp() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-        ResourceBundle bundle = ResourceBundle.getBundle("jdbc");
-        String prefix = "jdbc.mysql.replication.";
-        master = new BinaryLogClientIntegrationTest.MySQLConnection(bundle.getString(prefix + "master.hostname"),
-                Integer.parseInt(bundle.getString(prefix + "master.port")),
-                bundle.getString(prefix + "master.username"), bundle.getString(prefix + "master.password"));
+
+        MysqlOnetimeServer masterServer = new MysqlOnetimeServer();
+        masterServer.boot();
+
+        master = new BinaryLogClientIntegrationTest.MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
+
         client = new BinaryLogClient(master.hostname(), master.port(), master.username(), master.password());
         client.setServerId(client.getServerId() - 1); // avoid clashes between BinaryLogClient instances
         client.setKeepAlive(false);
@@ -98,6 +99,7 @@ public class JsonBinaryValueIntegrationTest {
             });
         } catch (SQLSyntaxErrorException e) {
             // Skip the tests altogether since MySQL is pre 5.7
+            System.err.println("skipping JSON tests (pre 5.7)");
             throw new org.testng.SkipException("JSON data type is not supported by current version of MySQL");
         }
         eventListener.waitFor(EventType.QUERY, 3, DEFAULT_TIMEOUT);
@@ -433,7 +435,7 @@ public class JsonBinaryValueIntegrationTest {
             public void onEvent(Event event) {
                 if (event.getHeader().getEventType() == EventType.QUERY) {
                     EventData data = event.getData();
-                    if (data != null && ((QueryEventData) data).getSql().contains("_EOS_marker")) {
+                    if (data != null && ((QueryEventData) data).getSql().toLowerCase().contains("_eos_marker")) {
                         latch.countDown();
                     }
                 }
