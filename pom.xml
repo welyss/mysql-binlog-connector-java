@@ -159,33 +159,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.9.1</version>
-                <configuration>
-                    <failsOnError>true</failsOnError>
-                    <configLocation>supplement/codequality/checkstyle.xml</configLocation>
-                    <headerLocation>supplement/codequality/license.header</headerLocation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <consoleOutput>true</consoleOutput>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>checkstyle</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.github.shyiko</groupId>
-                        <artifactId>checkstyle-nonstandard</artifactId>
-                        <version>0.1.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
                 <groupId>com.github.shyiko.usage-maven-plugin</groupId>
                 <artifactId>usage-maven-plugin</artifactId>
                 <version>1.0.0</version>
@@ -194,23 +167,9 @@
                         # build everything (append "-DskipTests=true" if you wish to skip tests)
                         ./mvnw clean package
 
-                        # run unit + integration tests, validate codebase using checkstyle
+                        # run unit + integration tests
                         ./mvnw -P coverage clean verify
                         # use -Dvagrant.integration.box= to switch between MySQL sandboxes
-
-                        # for aggregated coverage over different mysql releases use
-                        ./mvnw clean
-                        ./mvnw -P coverage verify \
-                            -Dvagrant.integration.box=supplement/vagrant/mysql-5.5.27-sandbox-prepackaged
-                        ./mvnw -P coverage verify \
-                            -Dvagrant.integration.box=supplement/vagrant/mysql-5.6.12-sandbox-prepackaged
-                        ./mvnw -P coverage verify \
-                            -Dvagrant.integration.box=supplement/vagrant/mysql-5.7.15-sandbox-prepackaged
-                        ./mvnw -P coverage,mysql-8-compat verify \
-                            -Dvagrant.integration.box=supplement/vagrant/mysql-8.0.1-sandbox-prepackaged
-
-                        # submit coverage report to coveralls
-                        ./mvnw -P coverage coveralls:jacoco -DrepoToken=&lt;coveralls.io&gt;
 
                         # publish a new version
                         ./mvnw versions:set -DnewVersion=&lt;version&gt;
@@ -240,46 +199,6 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>
-        <profile>
-            <id>coverage</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.7.9</version>
-                        <configuration>
-                            <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
-                            <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
-                            <append>true</append>
-                            <excludes>
-                                <exclude>**/ClientCapabilities.*</exclude>
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>jacoco-initialize</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>jacoco-site</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.eluder.coveralls</groupId>
-                        <artifactId>coveralls-maven-plugin</artifactId>
-                        <version>2.0.0</version>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>deploy-to-maven-central</id>
