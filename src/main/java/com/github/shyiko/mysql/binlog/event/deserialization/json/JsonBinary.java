@@ -320,6 +320,10 @@ public class JsonBinary {
      */
     protected void parseObject(boolean small, JsonFormatter formatter)
             throws IOException {
+        // this is terrible, but without a decent seekable InputStream the other way seemed like
+        // a full-on rewrite
+        int objectOffset = this.reader.getPosition();
+
         // Read the header ...
         int numElements = readUnsignedIndex(Integer.MAX_VALUE, small, "number of elements in");
         int numBytes = readUnsignedIndex(Integer.MAX_VALUE, small, "size of");
@@ -399,7 +403,7 @@ public class JsonBinary {
             } else {
                 // Parse the value ...
                 this.reader.reset();
-                this.reader.skip(entry.index + 1);
+                this.reader.skip(objectOffset + entry.index);
                 parse(entry.type, formatter);
             }
         }
