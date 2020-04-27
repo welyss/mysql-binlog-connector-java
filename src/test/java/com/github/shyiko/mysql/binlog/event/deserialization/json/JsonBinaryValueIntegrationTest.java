@@ -410,17 +410,17 @@ public class JsonBinaryValueIntegrationTest {
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
         try {
-            master.execute(new BinaryLogClientIntegrationTest.Callback<Statement>() {
-                @Override
-                public void execute(Statement statement) throws SQLException {
-                    statement.execute("drop table if exists data_type_hell");
-                    statement.execute("create table data_type_hell (column_ " + "JSON" + ")");
-                    statement.execute("insert into data_type_hell values (" + value + ")");
-                }
+            master.execute(statement -> {
+                statement.execute("drop table if exists data_type_hell");
+                statement.execute("create table data_type_hell (column_ " + "JSON" + ")");
+                statement.execute("insert into data_type_hell values (" + value + ")");
             });
             eventListener.waitFor(WriteRowsEventData.class, 1, DEFAULT_TIMEOUT);
         } finally {
             client.unregisterEventListener(capturingEventListener);
+        }
+        if ( capturingEventListener.getEvents(WriteRowsEventData.class).size() == 0 ) {
+            assertTrue(false, "did not receive rows in json test for " + value);
         }
         byte[] b = (byte[]) capturingEventListener.getEvents(WriteRowsEventData.class).get(0).getRows().get(0)[0];
         return b == null ? null : JsonBinary.parseAsString(b);
@@ -430,12 +430,12 @@ public class JsonBinaryValueIntegrationTest {
     public void afterEachTest() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final String markerQuery = "drop table if exists _EOS_marker";
-        BinaryLogClient.EventListener markerInterceptor = new BinaryLogClient.EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                if (event.getHeader().getEventType() == EventType.QUERY) {
-                    EventData data = event.getData();
-                    if (data != null && ((QueryEventData) data).getSql().toLowerCase().contains("_eos_marker")) {
+        BinaryLogClient.EventListener markerInterceptor = event -> {
+            if (event.getHeader().getEventType() == EventType.QUERY) {
+                EventData data = event.getData();
+                if (data != null) {
+                    String sql = ((QueryEventData) data).getSql().toLowerCase();
+                    if (sql.contains("_EOS_marker".toLowerCase())) {
                         latch.countDown();
                     }
                 }
