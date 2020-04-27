@@ -59,14 +59,14 @@ public class MysqlOnetimeServer {
 			serverID = "--server_id=" + options.serverID;
 
 		String authPlugin = "";
-		// if ( this.getVersion().atLeast(8, 0) ) {
-         if ( false ) {
+
+		if ( getVersion().atLeast(8, 0) ) {
 			authPlugin = "--default-authentication-plugin=mysql_native_password";
 		}
 
 		ProcessBuilder pb = new ProcessBuilder(
 			dir + "/src/test/onetimeserver",
-			"--mysql-version=" + this.getVersionString(),
+			"--mysql-version=" + getVersionString(),
 			"--log-slave-updates",
 			"--log-bin=master",
 			"--binlog_format=row",
@@ -91,24 +91,21 @@ public class MysqlOnetimeServer {
 
 		final BufferedReader errReader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-		new Thread() {
-			@Override
-			public void run() {
-				while (true) {
-					String l = null;
-					try {
-						l = errReader.readLine();
-					} catch ( IOException e) {};
+		new Thread(() -> {
+            while (true) {
+                String l = null;
+                try {
+                    l = errReader.readLine();
+                } catch ( IOException e) {};
 
-					if (l == null)
-						break;
-					System.err.println(l);
-				}
-			}
-		}.start();
+                if (l == null)
+                    break;
+                System.err.println(l);
+            }
+        }).start();
 
 		String json = reader.readLine();
-		String outputFile = null;
+		String outputFile;
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			Map<String, Object> output = mapper.readValue(json, MAP_STRING_OBJECT_REF);
