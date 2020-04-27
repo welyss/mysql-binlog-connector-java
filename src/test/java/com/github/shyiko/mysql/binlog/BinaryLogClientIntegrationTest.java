@@ -34,6 +34,7 @@ import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
 import com.github.shyiko.mysql.binlog.network.ServerException;
 import com.github.shyiko.mysql.binlog.network.SocketFactory;
+import com.zendesk.maxwell.replication.MysqlVersion;
 import org.mockito.InOrder;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -110,18 +111,25 @@ public class BinaryLogClientIntegrationTest {
     protected MySQLConnection master, slave;
     protected BinaryLogClient client;
     protected CountDownEventListener eventListener;
+    protected MysqlVersion mysqlVersion;
+
+    protected MysqlOnetimeServerOptions getOptions() {
+        return null;
+    }
 
     @BeforeClass
     public void setUp() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-        MysqlOnetimeServer masterServer = new MysqlOnetimeServer();
-        MysqlOnetimeServer slaveServer = new MysqlOnetimeServer();
+        MysqlOnetimeServer masterServer = new MysqlOnetimeServer(getOptions());
+        MysqlOnetimeServer slaveServer = new MysqlOnetimeServer(getOptions());
+
         masterServer.boot();
         slaveServer.boot();
         slaveServer.setupSlave(masterServer.getPort());
 
         master = new MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
         slave = new MySQLConnection("127.0.0.1", slaveServer.getPort(), "root", "");
+        mysqlVersion = masterServer.getVersion();
 
         client = new BinaryLogClient(slave.hostname, slave.port, slave.username, slave.password);
         EventDeserializer eventDeserializer = new EventDeserializer();

@@ -2,6 +2,7 @@ package com.github.shyiko.mysql.binlog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zendesk.maxwell.replication.MysqlVersion;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -244,6 +245,11 @@ public class MysqlOnetimeServer {
 			Runtime.getRuntime().exec("kill " + this.serverPid);
 		} catch ( IOException e ) {}
 	}
+
+    public MysqlVersion getVersion() {
+        String[] parts = getVersionString().split("\\.");
+        return new MysqlVersion(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]));
+    }
 
 	private static String getVersionString() {
 		String mysqlVersion = System.getenv("MYSQL_VERSION");
