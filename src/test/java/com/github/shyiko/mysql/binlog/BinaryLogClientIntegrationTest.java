@@ -120,6 +120,7 @@ public class BinaryLogClientIntegrationTest {
     @BeforeClass
     public void setUp() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+        mysqlVersion = MysqlOnetimeServer.getVersion();
         MysqlOnetimeServer masterServer = new MysqlOnetimeServer(getOptions());
         MysqlOnetimeServer slaveServer = new MysqlOnetimeServer(getOptions());
 
@@ -129,7 +130,6 @@ public class BinaryLogClientIntegrationTest {
 
         master = new MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
         slave = new MySQLConnection("127.0.0.1", slaveServer.getPort(), "root", "");
-        mysqlVersion = masterServer.getVersion();
 
         client = new BinaryLogClient(slave.hostname, slave.port, slave.username, slave.password);
         EventDeserializer eventDeserializer = new EventDeserializer();

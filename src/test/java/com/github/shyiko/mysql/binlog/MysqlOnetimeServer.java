@@ -34,7 +34,7 @@ public class MysqlOnetimeServer {
     }
 
     public MysqlOnetimeServer(MysqlOnetimeServerOptions options) {
-	    this.options = options;
+	    this.options = options == null ? new MysqlOnetimeServerOptions() : options;
     }
 
 	public void boot() throws Exception {
@@ -246,7 +246,7 @@ public class MysqlOnetimeServer {
 		} catch ( IOException e ) {}
 	}
 
-    public MysqlVersion getVersion() {
+    public static MysqlVersion getVersion() {
         String[] parts = getVersionString().split("\\.");
         return new MysqlVersion(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]));
     }

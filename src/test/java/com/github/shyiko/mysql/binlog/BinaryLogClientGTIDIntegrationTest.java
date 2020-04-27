@@ -37,6 +37,10 @@ import static org.testng.AssertJUnit.assertNotNull;
 public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrationTest {
     @Override
     protected MysqlOnetimeServerOptions getOptions() {
+        if ( !this.mysqlVersion.atLeast(5,7) )  {
+            throw new SkipException("skipping gtid on 5.5");
+        }
+
         MysqlOnetimeServerOptions options = new MysqlOnetimeServerOptions();
         options.gtid = true;
         return options;
