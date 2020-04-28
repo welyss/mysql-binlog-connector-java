@@ -50,13 +50,13 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
     public void testGTIDAdvancesStatementBased() throws Exception {
         try {
             master.execute("set global binlog_format=statement");
-            slave.execute("set global binlog_format=statement", "stop slave", "start slave");
+            slave.execute("stop slave", "set global binlog_format=statement", "start slave");
             master.reconnect();
             master.execute("use test");
             testGTIDAdvances();
         } finally {
             master.execute("set global binlog_format=row");
-            slave.execute("set global binlog_format=row", "stop slave", "start slave");
+            slave.execute("stop slave", "set global binlog_format=row", "start slave");
             master.reconnect();
             master.execute("use test");
         }
