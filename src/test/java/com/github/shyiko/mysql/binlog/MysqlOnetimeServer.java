@@ -2,7 +2,6 @@ package com.github.shyiko.mysql.binlog;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zendesk.maxwell.replication.MysqlVersion;
 
 import java.io.BufferedReader;
 import java.io.IOException;

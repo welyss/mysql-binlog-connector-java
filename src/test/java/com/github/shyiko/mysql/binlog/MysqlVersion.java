@@ -1,4 +1,4 @@
-package com.zendesk.maxwell.replication;
+package com.github.shyiko.mysql.binlog;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
