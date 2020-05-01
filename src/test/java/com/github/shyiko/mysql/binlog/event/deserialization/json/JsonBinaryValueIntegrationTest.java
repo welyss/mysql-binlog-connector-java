@@ -26,6 +26,7 @@ import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.QueryEventData;
+import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.testng.annotations.AfterClass;
@@ -125,7 +126,6 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("970785C8-C299", "970785C8"));
-        assertEquals(((byte[]) updateData[0]).length, ((byte[]) insertData[0]).length);
     }
 
     @Test
@@ -147,7 +147,6 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("\"ab\":\"970785C8-C299\"", ""));
-        assertEquals(((byte[]) updateData[0]).length, ((byte[]) insertData[0]).length);
     }
 
     @Test
@@ -169,7 +168,29 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("970785C8-C299", "9707"));
-        assertEquals(((byte[]) updateData[0]).length, ((byte[]) insertData[0]).length);
+    }
+
+    @Test
+    public void testMysql8JsonRemoveArrayValue() throws Exception {
+        CountDownEventListener eventListener = new CountDownEventListener();
+        client.registerEventListener(eventListener);
+        CapturingEventListener capturingEventListener = new CapturingEventListener();
+        client.registerEventListener(capturingEventListener);
+
+        String json = "[\"foo\",\"bar\",\"baz\"]";
+        master.execute("DROP TABLE IF EXISTS json_test", "create table json_test (j JSON)",
+            "INSERT INTO json_test VALUES ('" + json + "')",
+            "UPDATE json_test SET j = JSON_REMOVE(j, '$[1]')");
+        eventListener.waitFor(WriteRowsEventData.class, 1, DEFAULT_TIMEOUT);
+        eventListener.waitFor(UpdateRowsEventData.class, 1, DEFAULT_TIMEOUT);
+
+        List<WriteRowsEventData> events = capturingEventListener.getEvents(WriteRowsEventData.class);
+        Serializable[] insertData = events.iterator().next().getRows().get(0);
+        assertEquals(JsonBinary.parseAsString((byte[]) insertData[0]), json);
+
+        List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
+        Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
+        assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), "[\"foo\",\"baz\"]");
     }
 
     @Test
