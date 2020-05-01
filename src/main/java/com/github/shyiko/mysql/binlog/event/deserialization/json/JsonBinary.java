@@ -470,6 +470,8 @@ public class JsonBinary {
     // checkstyle, please ignore MethodLength for the next line
     protected void parseArray(boolean small, JsonFormatter formatter)
             throws IOException {
+        int arrayOffset = this.reader.getPosition();
+
         // Read the header ...
         int numElements = readUnsignedIndex(Integer.MAX_VALUE, small, "number of elements in");
         int numBytes = readUnsignedIndex(Integer.MAX_VALUE, small, "size of");
@@ -534,6 +536,9 @@ public class JsonBinary {
                 }
             } else {
                 // Parse the value ...
+                this.reader.reset();
+                this.reader.skip(arrayOffset + entry.index);
+
                 parse(entry.type, formatter);
             }
         }
