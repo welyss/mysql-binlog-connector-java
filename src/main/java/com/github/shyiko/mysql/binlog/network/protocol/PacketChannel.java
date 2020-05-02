@@ -32,7 +32,8 @@ import java.nio.channels.Channel;
  * @author <a href="mailto:stanley.shyiko@gmail.com">Stanley Shyiko</a>
  */
 public class PacketChannel implements Channel {
-
+    private int packetNumber = 1;
+    private boolean authenticationComplete;
     private Socket socket;
     private ByteArrayInputStream inputStream;
     private ByteArrayOutputStream outputStream;
@@ -55,34 +56,34 @@ public class PacketChannel implements Channel {
         return outputStream;
     }
 
+    public void authenticationComplete() {
+        authenticationComplete = true;
+    }
+
     public byte[] read() throws IOException {
         int length = inputStream.readInteger(3);
         inputStream.skip(1); //sequence
         return inputStream.read(length);
     }
 
-    public void write(Command command, int packetNumber) throws IOException {
+    public void write(Command command) throws IOException {
         byte[] body = command.toByteArray();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         buffer.writeInteger(body.length, 3); // packet length
-        buffer.writeInteger(packetNumber, 1);
+
+        // see https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_basic_packets.html#sect_protocol_basic_packets_sequence_id
+        // we only have to maintain a sequence number in the authentication phase.
+        // what the point is, I do not know
+        if ( authenticationComplete )
+            buffer.writeInteger(0, 1);
+        else
+            buffer.writeInteger(packetNumber++, 1);
+
         buffer.write(body, 0, body.length);
         outputStream.write(buffer.toByteArray());
         // though it has no effect in case of default (underlying) output stream (SocketOutputStream),
         // it may be necessary in case of non-default one
         outputStream.flush();
-    }
-
-    /**
-     * @deprecated use {@link #write(Command, int)} instead
-     */
-    @Deprecated
-    public void writeBuffered(Command command, int packetNumber) throws IOException {
-        write(command, packetNumber);
-    }
-
-    public void write(Command command) throws IOException {
-        write(command, 0);
     }
 
     public void upgradeToSSL(SSLSocketFactory sslSocketFactory, HostnameVerifier hostnameVerifier) throws IOException {
