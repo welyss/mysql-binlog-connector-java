@@ -1001,6 +1001,19 @@ public class BinaryLogClientIntegrationTest {
     }
 
     @Test
+    public void testMysql8Auth() throws Exception {
+        if ( !mysqlVersion.atLeast(8, 0) )
+            throw new SkipException("skipping mysql8 auth test");
+
+        master.execute("create user 'mysql8' IDENTIFIED WITH caching_sha2_password BY 'testpass'");
+        master.execute("grant replication slave on *.* to 'mysql8'");
+
+        final BinaryLogClient binaryLogClient =
+            new BinaryLogClient(master.hostname, master.port, "mysql8", "testPass");
+        binaryLogClient.connect(5000);
+    }
+
+    @Test
     public void testMySQL8TableMetadata() throws Exception {
         master.execute("drop table if exists test_metameta");
         master.execute("create table test_metameta ( " +
