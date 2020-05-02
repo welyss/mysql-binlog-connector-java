@@ -56,7 +56,10 @@ public class AuthenticateSecurityPasswordCommand implements Command {
         int clientCapabilities = this.clientCapabilities;
         if (clientCapabilities == 0) {
             clientCapabilities = ClientCapabilities.LONG_FLAG |
-                    ClientCapabilities.PROTOCOL_41 | ClientCapabilities.SECURE_CONNECTION;
+                ClientCapabilities.PROTOCOL_41 |
+                ClientCapabilities.SECURE_CONNECTION |
+                ClientCapabilities.PLUGIN_AUTH;
+
             if (schema != null) {
                 clientCapabilities |= ClientCapabilities.CONNECT_WITH_DB;
             }
@@ -68,7 +71,7 @@ public class AuthenticateSecurityPasswordCommand implements Command {
             buffer.write(0);
         }
         buffer.writeZeroTerminatedString(username);
-        byte[] passwordSHA1 = "".equals(password) ? new byte[0] : passwordCompatibleWithMySQL411(password, salt);
+        byte[] passwordSHA1 = passwordCompatibleWithMySQL411(password, salt);
         buffer.writeInteger(passwordSHA1.length, 1);
         buffer.write(passwordSHA1);
         if (schema != null) {
@@ -81,6 +84,9 @@ public class AuthenticateSecurityPasswordCommand implements Command {
      * see mysql/sql/password.c scramble(...)
      */
     public static byte[] passwordCompatibleWithMySQL411(String password, String salt) {
+        if ( "".equals(password) || password == null )
+            return new byte[0];
+
         MessageDigest sha;
         try {
             sha = MessageDigest.getInstance("SHA-1");
