@@ -151,6 +151,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     private volatile PacketChannel channel;
     private volatile boolean connected;
+    private volatile long masterServerId = -1;
 
     private ThreadFactory threadFactory;
 
@@ -227,6 +228,10 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             throw new IllegalArgumentException("SSL mode cannot be NULL");
         }
         this.sslMode = sslMode;
+    }
+
+    public long getMasterServerId() {
+        return this.masterServerId;
     }
 
     /**
@@ -535,6 +540,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 if (checksumType != ChecksumType.NONE) {
                     confirmSupportOfChecksum(checksumType);
                 }
+                setMasterServerId();
                 if (heartbeatInterval > 0) {
                     enableHeartbeat();
                 }
@@ -654,6 +660,14 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             ErrorPacket errorPacket = new ErrorPacket(bytes);
             throw new ServerException(errorPacket.getErrorMessage(), errorPacket.getErrorCode(),
                 errorPacket.getSqlState());
+        }
+    }
+
+    private void setMasterServerId() throws IOException {
+        channel.write(new QueryCommand("select @@server_id"));
+        ResultSetRowPacket[] resultSet = readResultSet();
+        if (resultSet.length >= 0) {
+            this.masterServerId = Long.parseLong(resultSet[0].getValue(0));
         }
     }
 

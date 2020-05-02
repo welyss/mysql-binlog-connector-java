@@ -42,7 +42,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.Closeable;
 import java.io.EOFException;
 import java.io.FilterInputStream;
@@ -62,6 +61,7 @@ import java.sql.SQLException;
 import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.AbstractMap;
+import java.util.Base64;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.List;
@@ -110,18 +110,26 @@ public class BinaryLogClientIntegrationTest {
     protected MySQLConnection master, slave;
     protected BinaryLogClient client;
     protected CountDownEventListener eventListener;
+    protected MysqlVersion mysqlVersion;
+
+    protected MysqlOnetimeServerOptions getOptions() {
+        return null;
+    }
 
     @BeforeClass
     public void setUp() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-        ResourceBundle bundle = ResourceBundle.getBundle("jdbc");
-        String prefix = "jdbc.mysql.replication.";
-        master = new MySQLConnection(bundle.getString(prefix + "master.hostname"),
-                Integer.parseInt(bundle.getString(prefix + "master.port")),
-                bundle.getString(prefix + "master.username"), bundle.getString(prefix + "master.password"));
-        slave = new MySQLConnection(bundle.getString(prefix + "slave.hostname"),
-                Integer.parseInt(bundle.getString(prefix + "slave.port")),
-                bundle.getString(prefix + "slave.superUsername"), bundle.getString(prefix + "slave.superPassword"));
+        mysqlVersion = MysqlOnetimeServer.getVersion();
+        MysqlOnetimeServer masterServer = new MysqlOnetimeServer(getOptions());
+        MysqlOnetimeServer slaveServer = new MysqlOnetimeServer(getOptions());
+
+        masterServer.boot();
+        slaveServer.boot();
+        slaveServer.setupSlave(masterServer.getPort());
+
+        master = new MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
+        slave = new MySQLConnection("127.0.0.1", slaveServer.getPort(), "root", "");
+
         client = new BinaryLogClient(slave.hostname, slave.port, slave.username, slave.password);
         EventDeserializer eventDeserializer = new EventDeserializer();
         eventDeserializer.setCompatibilityMode(CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY,
@@ -322,7 +330,7 @@ public class BinaryLogClientIntegrationTest {
         assertEquals(writeAndCaptureRow("binary", "x'01'"), new Serializable[]{new byte[] {1}});
         assertEquals(writeAndCaptureRow("binary", "x'FF'"), new Serializable[]{new byte[] {-1}});
         assertEquals(writeAndCaptureRow("binary(16)", "unhex(md5(\"glob\"))"),
-            new Serializable[]{DatatypeConverter.parseHexBinary("8684147451a6cc3b92142c6f4b78e61c")});
+            new Serializable[]{Base64.getDecoder().decode("hoQUdFGmzDuSFCxvS3jmHA==")});
     }
 
     @Test
@@ -994,11 +1002,23 @@ public class BinaryLogClientIntegrationTest {
 
     @Test
     public void testMySQL8TableMetadata() throws Exception {
+        master.execute("drop table if exists test_metameta");
         master.execute("create table test_metameta ( " +
                 "a date, b date, c date, d date, e date, f date, g date, " +
                 "h date, i date, j int)");
         master.execute("insert into test_metameta set j = 5");
         eventListener.waitFor(WriteRowsEventData.class, 1, DEFAULT_TIMEOUT);
+    }
+
+    @Test
+    public void testSetMasterServerId() throws Exception {
+        slave.query("SELECT @@server_id", new Callback<ResultSet>() {
+            @Override
+            public void execute(final ResultSet rs) throws SQLException {
+                rs.next();
+                assertEquals(client.getMasterServerId(), rs.getLong("@@server_id"));
+            }
+        });
     }
 
     @AfterMethod
@@ -1010,7 +1030,7 @@ public class BinaryLogClientIntegrationTest {
             public void onEvent(Event event) {
                 if (event.getHeader().getEventType() == EventType.QUERY) {
                     EventData data = event.getData();
-                    if (data != null && ((QueryEventData) data).getSql().contains("_EOS_marker")) {
+                    if (data != null && ((QueryEventData) data).getSql().toLowerCase().contains("_eos_marker")) {
                         latch.countDown();
                     }
                 }

@@ -27,10 +27,12 @@ public class ByteArrayInputStream extends InputStream {
 
     private InputStream inputStream;
     private Integer peek;
+    private Integer pos, markPosition;
     private int blockLength = -1;
 
     public ByteArrayInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
+        this.pos = 0;
     }
 
     public ByteArrayInputStream(byte[] bytes) {
@@ -189,6 +191,7 @@ public class ByteArrayInputStream extends InputStream {
         if (result == -1) {
             throw new EOFException();
         }
+        this.pos += 1;
         return result;
     }
 
@@ -218,4 +221,24 @@ public class ByteArrayInputStream extends InputStream {
         }
     }
 
+    public int getPosition() {
+        return pos;
+    }
+
+    @Override
+    public synchronized void mark(int readlimit) {
+        markPosition = pos;
+        inputStream.mark(readlimit);
+    }
+
+    @Override
+    public boolean markSupported() {
+        return inputStream.markSupported();
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+        pos = markPosition;
+        inputStream.reset();
+    }
 }
