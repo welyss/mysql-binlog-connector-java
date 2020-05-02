@@ -53,7 +53,7 @@ import static org.testng.Assert.assertTrue;
  */
 public class JsonBinaryValueIntegrationTest {
 
-    private static final long DEFAULT_TIMEOUT = TimeUnit.SECONDS.toMillis(3);
+    private static final long DEFAULT_TIMEOUT = TimeUnit.SECONDS.toMillis(6);
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());
 
