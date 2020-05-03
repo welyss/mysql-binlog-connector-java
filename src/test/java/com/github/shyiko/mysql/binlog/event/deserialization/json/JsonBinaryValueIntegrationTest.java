@@ -507,6 +507,7 @@ public class JsonBinaryValueIntegrationTest {
             client.unregisterEventListener(capturingEventListener);
         }
         if ( capturingEventListener.getEvents(WriteRowsEventData.class).size() == 0 ) {
+            System.out.println("I am about to fail an expectation...");
             assertTrue(false, "did not receive rows in json test for " + value);
         }
         byte[] b = (byte[]) capturingEventListener.getEvents(WriteRowsEventData.class).get(0).getRows().get(0)[0];

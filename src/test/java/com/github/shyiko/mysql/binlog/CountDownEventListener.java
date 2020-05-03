@@ -35,9 +35,12 @@ public class CountDownEventListener implements BinaryLogClient.EventListener {
 
     @Override
     public void onEvent(Event event) {
+        System.out.println("increment Counter for " + event.getHeader().getEventType() + " " + getCounter(countersByType, event.getHeader().getEventType()));
+
         incrementCounter(getCounter(countersByType, event.getHeader().getEventType()));
         EventData data = event.getData();
         if (data != null) {
+            System.out.println("increment Counter for " + data.getClass() + " " + getCounter(countersByDataClass, data.getClass()));
             incrementCounter(getCounter(countersByDataClass, data.getClass()));
         }
     }
@@ -76,6 +79,7 @@ public class CountDownEventListener implements BinaryLogClient.EventListener {
             long timeoutInMilliseconds) throws TimeoutException, InterruptedException {
         synchronized (counter) {
             counter.set(counter.get() - numberOfExpectedEvents);
+            System.out.println("counter " + counterName + " set to " + counter.get());
             if (counter.get() != 0) {
                 counter.wait(timeoutInMilliseconds);
                 if (counter.get() != 0) {
