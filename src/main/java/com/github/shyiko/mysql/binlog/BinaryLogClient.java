@@ -717,7 +717,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             if (serverSupportsSSL) {
                 SSLRequestCommand sslRequestCommand = new SSLRequestCommand();
                 sslRequestCommand.setCollation(collation);
-                channel.write(sslRequestCommand, packetNumber++);
+                channel.write(sslRequestCommand);
                 SSLSocketFactory sslSocketFactory =
                     this.sslSocketFactory != null ?
                         this.sslSocketFactory :
@@ -732,7 +732,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         AuthenticateCommand authenticateCommand = new AuthenticateCommand(schema, username, password,
             greetingPacket.getScramble());
         authenticateCommand.setCollation(collation);
-        channel.write(authenticateCommand, packetNumber);
+        channel.write(authenticateCommand);
         byte[] authenticationResult = channel.read();
         if (authenticationResult[0] != (byte) 0x00 /* ok */) {
             if (authenticationResult[0] == (byte) 0xFF /* error */) {
@@ -746,6 +746,8 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 throw new AuthenticationException("Unexpected authentication result (" + authenticationResult[0] + ")");
             }
         }
+
+        channel.authenticationComplete();
     }
 
     private void switchAuthentication(byte[] authenticationResult, boolean usingSSLSocket) throws IOException {
@@ -762,7 +764,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             String scramble = buffer.readZeroTerminatedString();
 
             Command switchCommand = new AuthenticateNativePasswordCommand(scramble, password);
-            channel.write(switchCommand, (usingSSLSocket ? 4 : 3));
+            channel.write(switchCommand);
             byte[] authResult = channel.read();
 
             if (authResult[0] != (byte) 0x00) {
