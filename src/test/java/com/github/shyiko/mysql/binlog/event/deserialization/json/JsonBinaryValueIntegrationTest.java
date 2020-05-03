@@ -109,8 +109,6 @@ public class JsonBinaryValueIntegrationTest {
 
     @Test
     public void testMysql8JsonSetPartialUpdateWithHoles() throws Exception {
-        CountDownEventListener eventListener = new CountDownEventListener();
-        client.registerEventListener(eventListener);
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
         String json = "{\"age\":22,\"addr\":{\"code\":100,\"detail\":{\"ab\":\"970785C8-C299\"}},\"name\":\"Alice\"}";
@@ -130,8 +128,6 @@ public class JsonBinaryValueIntegrationTest {
 
     @Test
     public void testMysql8JsonRemovePartialUpdateWithHoles() throws Exception {
-        CountDownEventListener eventListener = new CountDownEventListener();
-        client.registerEventListener(eventListener);
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
         String json = "{\"age\":22,\"addr\":{\"code\":100,\"detail\":{\"ab\":\"970785C8-C299\"}},\"name\":\"Alice\"}";
@@ -147,12 +143,12 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("\"ab\":\"970785C8-C299\"", ""));
+
+        client.unregisterEventListener(capturingEventListener);
     }
 
     @Test
     public void testMysql8JsonReplacePartialUpdateWithHoles() throws Exception {
-        CountDownEventListener eventListener = new CountDownEventListener();
-        client.registerEventListener(eventListener);
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
         String json = "{\"age\":22,\"addr\":{\"code\":100,\"detail\":{\"ab\":\"970785C8-C299\"}},\"name\":\"Alice\"}";
@@ -168,12 +164,12 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("970785C8-C299", "9707"));
+
+        client.unregisterEventListener(capturingEventListener);
     }
 
     @Test
     public void testMysql8JsonRemoveArrayValue() throws Exception {
-        CountDownEventListener eventListener = new CountDownEventListener();
-        client.registerEventListener(eventListener);
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
 
@@ -191,12 +187,12 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), "[\"foo\",\"baz\"]");
+
+        client.unregisterEventListener(capturingEventListener);
     }
 
     @Test
     public void testValueBoundariesAreHonored() throws Exception {
-        CountDownEventListener eventListener = new CountDownEventListener();
-        client.registerEventListener(eventListener);
         CapturingEventListener capturingEventListener = new CapturingEventListener();
         client.registerEventListener(capturingEventListener);
         master.execute("create table json_b (h varchar(255), j JSON, k varchar(255))",
@@ -207,6 +203,8 @@ public class JsonBinaryValueIntegrationTest {
         assertEquals(data[0], "sponge");
         assertEquals(JsonBinary.parseAsString((byte[]) data[1]), "{}");
         assertEquals(data[2], "bob");
+
+        client.unregisterEventListener(capturingEventListener);
     }
 
     @Test
