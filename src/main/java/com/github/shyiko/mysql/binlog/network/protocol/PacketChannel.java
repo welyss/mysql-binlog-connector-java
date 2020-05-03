@@ -34,6 +34,7 @@ import java.nio.channels.Channel;
 public class PacketChannel implements Channel {
     private int packetNumber = 0;
     private boolean authenticationComplete;
+    private boolean isSSL = false;
     private Socket socket;
     private ByteArrayInputStream inputStream;
     private ByteArrayOutputStream outputStream;
@@ -101,6 +102,11 @@ public class PacketChannel implements Channel {
             throw new IdentityVerificationException("\"" + sslSocket.getInetAddress().getHostName() +
                 "\" identity was not confirmed");
         }
+        isSSL = true;
+    }
+
+    public boolean isSSL() {
+        return isSSL;
     }
 
     @Override

@@ -680,6 +680,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                             DEFAULT_VERIFY_CA_SSL_MODE_SOCKET_FACTORY;
                 channel.upgradeToSSL(sslSocketFactory,
                     sslMode == SSLMode.VERIFY_IDENTITY ? new TLSHostnameVerifier() : null);
+                logger.info("SSL enabled");
                 return true;
             }
         }

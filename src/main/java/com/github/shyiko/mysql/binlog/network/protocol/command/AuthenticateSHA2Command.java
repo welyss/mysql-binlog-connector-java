@@ -34,6 +34,7 @@ public class AuthenticateSHA2Command implements Command {
     private String salt;
     private int clientCapabilities;
     private int collation;
+    private boolean rawPassword = false;
 
     public AuthenticateSHA2Command(String schema, String username, String password, String salt, int collation) {
         this.schema = schema;
@@ -43,6 +44,12 @@ public class AuthenticateSHA2Command implements Command {
         this.collation = collation;
     }
 
+    public AuthenticateSHA2Command(String password, String salt) {
+        this.rawPassword = true;
+        this.password = password;
+        this.salt = salt;
+    }
+
     public void setClientCapabilities(int clientCapabilities) {
         this.clientCapabilities = clientCapabilities;
     }
@@ -50,6 +57,13 @@ public class AuthenticateSHA2Command implements Command {
     @Override
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        if ( rawPassword ) {
+            byte[] passwordSHA1 = encodePassword();
+            buffer.write(passwordSHA1);
+            return buffer.toByteArray();
+        }
+
         int clientCapabilities = this.clientCapabilities;
         if (clientCapabilities == 0) {
             clientCapabilities |= ClientCapabilities.LONG_FLAG;

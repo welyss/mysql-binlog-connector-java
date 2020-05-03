@@ -32,6 +32,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.QueryEventDataDeseri
 import com.github.shyiko.mysql.binlog.io.BufferedSocketInputStream;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
+import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.shyiko.mysql.binlog.network.ServerException;
 import com.github.shyiko.mysql.binlog.network.SocketFactory;
 import org.mockito.InOrder;
@@ -1006,11 +1007,12 @@ public class BinaryLogClientIntegrationTest {
             throw new SkipException("skipping mysql8 auth test");
 
         master.execute("create user 'mysql8' IDENTIFIED WITH caching_sha2_password BY 'testpass'");
-        master.execute("grant replication slave on *.* to 'mysql8'");
+        master.execute("grant replication slave, replication client on *.* to 'mysql8'");
 
         final BinaryLogClient binaryLogClient =
-            new BinaryLogClient(master.hostname, master.port, "mysql8", "testPass");
-        binaryLogClient.connect(5000);
+            new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
+        binaryLogClient.setSSLMode(SSLMode.PREFERRED);
+        binaryLogClient.connect(500000);
     }
 
     @Test
