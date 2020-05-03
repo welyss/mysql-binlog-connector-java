@@ -49,7 +49,7 @@ public class BinaryLogClientTest {
         assertEquals(binaryLogClient.getEventListeners().size(), 3);
         binaryLogClient.unregisterEventListener(traceEventListener);
         assertEquals(binaryLogClient.getEventListeners().size(), 2);
-        binaryLogClient.unregisterEventListener(CountDownEventListener.class);
+        binaryLogClient.unregisterEventListener(CapturingEventListener.class);
         assertEquals(binaryLogClient.getEventListeners().size(), 1);
     }
 
