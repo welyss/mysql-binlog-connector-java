@@ -33,6 +33,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.RotateEventDataDeser
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import com.github.shyiko.mysql.binlog.jmx.BinaryLogClientMXBean;
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
+import com.github.shyiko.mysql.binlog.network.Authenticator;
 import com.github.shyiko.mysql.binlog.network.ClientCapabilities;
 import com.github.shyiko.mysql.binlog.network.DefaultSSLSocketFactory;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
@@ -126,7 +127,6 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private final String schema;
     private final String username;
     private final String password;
-    private int packetNumber = 1;
 
     private boolean blocking = true;
     private long serverId = 65535;
@@ -520,9 +520,12 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                         ". Please make sure it's running.", e);
                 }
                 GreetingPacket greetingPacket = receiveGreeting();
-                tryUpgradeToSSL();
 
-                authenticate(greetingPacket);
+                tryUpgradeToSSL(greetingPacket);
+
+                new Authenticator(greetingPacket, channel, schema, username, password).authenticate();
+                channel.authenticationComplete();
+
                 connectionId = greetingPacket.getThreadId();
                 if ("".equals(binlogFilename)) {
                     synchronized (gtidSetAccessLock) {
@@ -658,7 +661,6 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     private boolean tryUpgradeToSSL(GreetingPacket greetingPacket) throws IOException {
         int collation = greetingPacket.getServerCollation();
-        int packetNumber = 1;
 
         if (sslMode != SSLMode.DISABLED) {
             boolean serverSupportsSSL = (greetingPacket.getServerCapabilities() & ClientCapabilities.SSL) != 0;
@@ -669,7 +671,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             if (serverSupportsSSL) {
                 SSLRequestCommand sslRequestCommand = new SSLRequestCommand();
                 sslRequestCommand.setCollation(collation);
-                channel.write(sslRequestCommand, packetNumber++);
+                channel.write(sslRequestCommand);
                 SSLSocketFactory sslSocketFactory =
                     this.sslSocketFactory != null ?
                         this.sslSocketFactory :
@@ -685,7 +687,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     }
 
 
-        private void enableHeartbeat() throws IOException {
+    private void enableHeartbeat() throws IOException {
         channel.write(new QueryCommand("set @master_heartbeat_period=" + heartbeatInterval * 1000000));
         byte[] statementResult = channel.read();
         if (statementResult[0] == (byte) 0xFF /* error */) {

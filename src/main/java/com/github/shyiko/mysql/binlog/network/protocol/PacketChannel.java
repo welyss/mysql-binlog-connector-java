@@ -32,7 +32,7 @@ import java.nio.channels.Channel;
  * @author <a href="mailto:stanley.shyiko@gmail.com">Stanley Shyiko</a>
  */
 public class PacketChannel implements Channel {
-    private int packetNumber = 1;
+    private int packetNumber = 0;
     private boolean authenticationComplete;
     private Socket socket;
     private ByteArrayInputStream inputStream;
@@ -62,7 +62,10 @@ public class PacketChannel implements Channel {
 
     public byte[] read() throws IOException {
         int length = inputStream.readInteger(3);
-        inputStream.skip(1); //sequence
+        int sequence = inputStream.read(); // sequence
+        if ( sequence != packetNumber++ ) {
+            throw new IOException("unexpected sequence #" + sequence);
+        }
         return inputStream.read(length);
     }
 
@@ -74,10 +77,11 @@ public class PacketChannel implements Channel {
         // see https://dev.mysql.com/doc/dev/mysql-server/8.0.11/page_protocol_basic_packets.html#sect_protocol_basic_packets_sequence_id
         // we only have to maintain a sequence number in the authentication phase.
         // what the point is, I do not know
-        if ( authenticationComplete )
-            buffer.writeInteger(0, 1);
-        else
-            buffer.writeInteger(packetNumber++, 1);
+        if ( authenticationComplete ) {
+            packetNumber = 0;
+        }
+
+        buffer.writeInteger(packetNumber++, 1);
 
         buffer.write(body, 0, body.length);
         outputStream.write(buffer.toByteArray());

@@ -13,50 +13,40 @@ import com.github.shyiko.mysql.binlog.network.protocol.command.SSLRequestCommand
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Authenticator {
     private final GreetingPacket greetingPacket;
     private final PacketChannel channel;
+    private final String schema;
+    private final String username;
+    private final String password;
 
-    public Authenticator(GreetingPacket greetingPacket, PacketChannel channel) {
+    private final Logger logger = Logger.getLogger(getClass().getName());
+
+    public Authenticator(
+        GreetingPacket greetingPacket,
+        PacketChannel channel,
+        String schema,
+        String username,
+        String password
+    ) {
        this.greetingPacket = greetingPacket;
        this.channel = channel;
+       this.schema = schema;
+       this.username = username;
+       this.password = password;
     }
 
-    private void authenticate(GreetingPacket greetingPacket) throws IOException {
+    public void authenticate() throws IOException {
+        logger.log(Level.INFO, "Begin auth for " + username);
         int collation = greetingPacket.getServerCollation();
-        int packetNumber = 1;
-
-        boolean usingSSLSocket = false;
-        if (sslMode != SSLMode.DISABLED) {
-            boolean serverSupportsSSL = (greetingPacket.getServerCapabilities() & ClientCapabilities.SSL) != 0;
-            if (!serverSupportsSSL && (sslMode == SSLMode.REQUIRED || sslMode == SSLMode.VERIFY_CA ||
-                sslMode == SSLMode.VERIFY_IDENTITY)) {
-                throw new IOException("MySQL server does not support SSL");
-            }
-            if (serverSupportsSSL) {
-                SSLRequestCommand sslRequestCommand = new SSLRequestCommand();
-                sslRequestCommand.setCollation(collation);
-                channel.write(sslRequestCommand, packetNumber++);
-                SSLSocketFactory sslSocketFactory =
-                    this.sslSocketFactory != null ?
-                        this.sslSocketFactory :
-                        sslMode == SSLMode.REQUIRED || sslMode == SSLMode.PREFERRED ?
-                            DEFAULT_REQUIRED_SSL_MODE_SOCKET_FACTORY :
-                            DEFAULT_VERIFY_CA_SSL_MODE_SOCKET_FACTORY;
-                channel.upgradeToSSL(sslSocketFactory,
-                    sslMode == SSLMode.VERIFY_IDENTITY ? new TLSHostnameVerifier() : null);
-                usingSSLSocket = true;
-            }
-        }
-
-        logger.log(Level.INFO, greetingPacket.getPluginProvidedData());
 
         Command authenticateCommand = "caching_sha2_password".equals(greetingPacket.getPluginProvidedData()) ?
             new AuthenticateSHA2Command(schema, username, password, greetingPacket.getScramble(), collation) :
             new AuthenticateSecurityPasswordCommand(schema, username, password, greetingPacket.getScramble(), collation);
 
-        channel.write(authenticateCommand, packetNumber);
+        channel.write(authenticateCommand);
         byte[] authenticationResult = channel.read();
         if (authenticationResult[0] != (byte) 0x00 /* ok */) {
             if (authenticationResult[0] == (byte) 0xFF /* error */) {
@@ -65,12 +55,11 @@ public class Authenticator {
                 throw new AuthenticationException(errorPacket.getErrorMessage(), errorPacket.getErrorCode(),
                     errorPacket.getSqlState());
             } else if (authenticationResult[0] == (byte) 0xFE) {
-                switchAuthentication(authenticationResult, usingSSLSocket);
+                switchAuthentication(authenticationResult);
             } else if (authenticationResult[0] == (byte) 0x01) {
                 if (authenticationResult.length >= 2 && (authenticationResult[1] == 3) || (authenticationResult[1] == 4)) {
                     // 8.0 auth ok
                     byte[] authenticationResultSha2 = channel.read();
-                    logger.log(Level.FINEST, "SHA2 auth result {0}", authenticationResultSha2);
                 } else {
                     throw new AuthenticationException("Unexpected authentication result (" + authenticationResult[0] + "&" + authenticationResult[1] + ")");
                 }
@@ -78,9 +67,10 @@ public class Authenticator {
                 throw new AuthenticationException("Unexpected authentication result (" + authenticationResult[0] + ")");
             }
         }
+        logger.log(Level.INFO, "Auth complete " + username);
     }
 
-    private void switchAuthentication(byte[] authenticationResult, boolean usingSSLSocket) throws IOException {
+    private void switchAuthentication(byte[] authenticationResult) throws IOException {
         /*
             Azure-MySQL likes to tell us to switch authentication methods, even though
             we haven't advertised that we support any.  It uses this for some-odd
@@ -94,7 +84,7 @@ public class Authenticator {
             String scramble = buffer.readZeroTerminatedString();
 
             Command switchCommand = new AuthenticateNativePasswordCommand(scramble, password);
-            channel.write(switchCommand, (usingSSLSocket ? 4 : 3));
+            channel.write(switchCommand);
             byte[] authResult = channel.read();
 
             if (authResult[0] != (byte) 0x00) {
@@ -107,6 +97,4 @@ public class Authenticator {
             throw new AuthenticationException("Unsupported authentication type: " + authName);
         }
     }
-
-
 }
