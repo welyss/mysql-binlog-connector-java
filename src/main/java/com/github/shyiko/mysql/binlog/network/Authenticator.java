@@ -7,6 +7,7 @@ import com.github.shyiko.mysql.binlog.network.protocol.GreetingPacket;
 import com.github.shyiko.mysql.binlog.network.protocol.PacketChannel;
 import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateNativePasswordCommand;
 import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateSHA2Command;
+import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateSHA2RSAPasswordCommand;
 import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateSecurityPasswordCommand;
 import com.github.shyiko.mysql.binlog.network.protocol.command.ByteArrayCommand;
 import com.github.shyiko.mysql.binlog.network.protocol.command.Command;
@@ -24,6 +25,7 @@ public class Authenticator {
     };
 
     private final GreetingPacket greetingPacket;
+    private String scramble;
     private final PacketChannel channel;
     private final String schema;
     private final String username;
@@ -44,6 +46,7 @@ public class Authenticator {
         String password
     ) {
        this.greetingPacket = greetingPacket;
+       this.scramble = greetingPacket.getScramble();
        this.channel = channel;
        this.schema = schema;
        this.username = username;
@@ -57,10 +60,10 @@ public class Authenticator {
         Command authenticateCommand;
         if ( SHA2_PASSWORD.equals(greetingPacket.getPluginProvidedData()) ) {
             authMethod = AuthMethod.CACHING_SHA2;
-            authenticateCommand = new AuthenticateSHA2Command(schema, username, password, greetingPacket.getScramble(), collation);
+            authenticateCommand = new AuthenticateSHA2Command(schema, username, password, scramble, collation);
         } else {
             authMethod = AuthMethod.NATIVE;
-            authenticateCommand = new AuthenticateSecurityPasswordCommand(schema, username, password, greetingPacket.getScramble(), collation);
+            authenticateCommand = new AuthenticateSecurityPasswordCommand(schema, username, password, scramble, collation);
         }
 
         channel.write(authenticateCommand);
@@ -100,22 +103,46 @@ public class Authenticator {
 
         switch(stream.read()) {
             case 0x03:
+                logger.log(Level.INFO, "caching auth successful");
                 // successful fast authentication
+                readResult();
                 return;
             case 0x04:
-                // need to send continue auth.
-                if ( channel.isSSL() ) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                continueCachingSHA2Authentication();
+        }
+    }
 
-                    buffer.write(password.getBytes());
-                    buffer.write(0);
+    private void continueCachingSHA2Authentication() throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        if ( channel.isSSL() ) {
+            // over SSL we simply send the password in cleartext.
 
-                    Command c = new ByteArrayCommand(buffer.toByteArray());
+            buffer.write(password.getBytes());
+            buffer.write(0);
+
+            Command c = new ByteArrayCommand(buffer.toByteArray());
+            channel.write(c);
+            readResult();
+        } else {
+            // try to download an RSA key
+            buffer.write(0x02);
+            channel.write(new ByteArrayCommand(buffer.toByteArray()));
+
+            ByteArrayInputStream stream = new ByteArrayInputStream(channel.read());
+            int result = stream.read();
+            switch(result) {
+                case 0x01:
+                    byte[] rsaKey = new byte[stream.available()];
+                    stream.read(rsaKey);
+
+                    Command c = new AuthenticateSHA2RSAPasswordCommand(new String(rsaKey), password, scramble);
                     channel.write(c);
+
                     readResult();
-                } else {
-                    throw new AuthenticationException("Please enable SSL in order to support caching_sha2_password auth");
-                }
+                    return;
+                default:
+                    throw new AuthenticationException("Unkown response fetching RSA key in caching_sha2_pasword auth: " + result);
+            }
         }
     }
 
@@ -132,14 +159,14 @@ public class Authenticator {
         if (MYSQL_NATIVE.equals(authName)) {
             authMethod = AuthMethod.NATIVE;
 
-            String scramble = buffer.readZeroTerminatedString();
+            this.scramble = buffer.readZeroTerminatedString();
 
             Command switchCommand = new AuthenticateNativePasswordCommand(scramble, password);
             channel.write(switchCommand);
         } else if ( SHA2_PASSWORD.equals(authName) ) {
             authMethod = AuthMethod.CACHING_SHA2;
 
-            String scramble = buffer.readZeroTerminatedString();
+            this.scramble = buffer.readZeroTerminatedString();
             Command authCommand = new AuthenticateSHA2Command(password, scramble);
             channel.write(authCommand);
         }
