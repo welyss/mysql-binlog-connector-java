@@ -117,8 +117,7 @@ public class Authenticator {
         if ( channel.isSSL() ) {
             // over SSL we simply send the password in cleartext.
 
-            buffer.write(password.getBytes());
-            buffer.write(0);
+            buffer.writeZeroTerminatedString(password);
 
             Command c = new ByteArrayCommand(buffer.toByteArray());
             channel.write(c);

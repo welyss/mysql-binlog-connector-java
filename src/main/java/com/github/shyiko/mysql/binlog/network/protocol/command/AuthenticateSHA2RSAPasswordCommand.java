@@ -1,9 +1,9 @@
 package com.github.shyiko.mysql.binlog.network.protocol.command;
 
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
+import com.github.shyiko.mysql.binlog.io.ByteArrayOutputStream;
 
 import javax.crypto.Cipher;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
@@ -26,16 +26,11 @@ public class AuthenticateSHA2RSAPasswordCommand implements Command {
     public byte[] toByteArray() throws IOException {
         RSAPublicKey key = decodeKey(rsaKey);
 
-        ByteArrayOutputStream nullTerminatedPassword = new ByteArrayOutputStream();
-        if ( password != null )
-            nullTerminatedPassword.write(password.getBytes());
-        nullTerminatedPassword.write(0);
+        ByteArrayOutputStream passBuffer = new ByteArrayOutputStream();
+        passBuffer.writeZeroTerminatedString(password);
 
-        byte[] passBytes = nullTerminatedPassword.toByteArray();
-        byte[] xorBuffer = CommandUtils.xor(passBytes, scramble.getBytes());
-        byte[] encrypted = encrypt(xorBuffer, key, RSA_METHOD);
-
-        return encrypted;
+        byte[] xorBuffer = CommandUtils.xor(passBuffer.toByteArray(), scramble.getBytes());
+        return encrypt(xorBuffer, key, RSA_METHOD);
     }
 
     private RSAPublicKey decodeKey(String key) throws AuthenticationException {

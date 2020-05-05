@@ -59,7 +59,9 @@ public class ByteArrayOutputStream extends OutputStream {
      * @see ByteArrayInputStream#readZeroTerminatedString()
      */
     public void writeZeroTerminatedString(String value) throws IOException {
-        write(value.getBytes());
+        if ( value != null )
+            write(value.getBytes());
+
         write(0);
     }
 
