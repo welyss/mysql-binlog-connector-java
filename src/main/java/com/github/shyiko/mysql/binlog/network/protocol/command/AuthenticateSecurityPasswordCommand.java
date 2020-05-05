@@ -94,7 +94,7 @@ public class AuthenticateSecurityPasswordCommand implements Command {
             throw new RuntimeException(e);
         }
         byte[] passwordHash = sha.digest(password.getBytes());
-        return xor(passwordHash, sha.digest(union(salt.getBytes(), sha.digest(passwordHash))));
+        return CommandUtils.xor(passwordHash, sha.digest(union(salt.getBytes(), sha.digest(passwordHash))));
     }
 
     private static byte[] union(byte[] a, byte[] b) {
@@ -103,13 +103,4 @@ public class AuthenticateSecurityPasswordCommand implements Command {
         System.arraycopy(b, 0, r, a.length, b.length);
         return r;
     }
-
-    private static byte[] xor(byte[] a, byte[] b) {
-        byte[] r = new byte[a.length];
-        for (int i = 0; i < r.length; i++) {
-            r[i] = (byte) (a[i] ^ b[i]);
-        }
-        return r;
-    }
-
 }

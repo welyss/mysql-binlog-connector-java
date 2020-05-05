@@ -31,23 +31,23 @@ public class AuthenticateSHA2Command implements Command {
     private String schema;
     private String username;
     private String password;
-    private String salt;
+    private String scramble;
     private int clientCapabilities;
     private int collation;
     private boolean rawPassword = false;
 
-    public AuthenticateSHA2Command(String schema, String username, String password, String salt, int collation) {
+    public AuthenticateSHA2Command(String schema, String username, String password, String scramble, int collation) {
         this.schema = schema;
         this.username = username;
         this.password = password;
-        this.salt = salt;
+        this.scramble = scramble;
         this.collation = collation;
     }
 
-    public AuthenticateSHA2Command(String password, String salt) {
+    public AuthenticateSHA2Command(String scramble, String password) {
         this.rawPassword = true;
         this.password = password;
-        this.salt = salt;
+        this.scramble = scramble;
     }
 
     public void setClientCapabilities(int clientCapabilities) {
@@ -128,29 +128,15 @@ public class AuthenticateSHA2Command implements Command {
 
             // SHA2(digest_stage2, m_rnd) => scramble_stage1
             md.update(dig2, 0, dig1.length);
-            md.update(salt.getBytes(), 0, salt.getBytes().length);
+            md.update(scramble.getBytes(), 0, scramble.getBytes().length);
             md.digest(scramble1, 0, CACHING_SHA2_DIGEST_LENGTH);
 
             // XOR(digest_stage1, scramble_stage1) => scramble
-            byte[] mysqlScrambleBuff = new byte[CACHING_SHA2_DIGEST_LENGTH];
-            xor(dig1, mysqlScrambleBuff, scramble1, CACHING_SHA2_DIGEST_LENGTH);
-
-            return mysqlScrambleBuff;
+            return CommandUtils.xor(dig1, scramble1);
         } catch (NoSuchAlgorithmException ex) {
             throw new RuntimeException(ex);
         } catch (DigestException e) {
             throw new RuntimeException(e);
         }
     }
-
-    private void xor(byte[] from, byte[] to, byte[] scramble, int length) {
-        int pos = 0;
-        int scrambleLength = scramble.length;
-
-        while (pos < length) {
-            to[pos] = (byte) (from[pos] ^ scramble[pos % scrambleLength]);
-            pos++;
-        }
-    }
-
 }

@@ -167,7 +167,7 @@ public class Authenticator {
             authMethod = AuthMethod.CACHING_SHA2;
 
             this.scramble = buffer.readZeroTerminatedString();
-            Command authCommand = new AuthenticateSHA2Command(password, scramble);
+            Command authCommand = new AuthenticateSHA2Command(scramble, password);
             channel.write(authCommand);
         }
 

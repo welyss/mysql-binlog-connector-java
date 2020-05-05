@@ -32,14 +32,9 @@ public class AuthenticateSHA2RSAPasswordCommand implements Command {
         nullTerminatedPassword.write(0);
 
         byte[] passBytes = nullTerminatedPassword.toByteArray();
-        byte[] scrambleBytes = scramble.getBytes();
-        byte[] xorBuffer = new byte[passBytes.length];
-
-        for(int pos = 0; pos < passBytes.length; pos++) {
-            xorBuffer[pos] = (byte) (passBytes[pos] ^ scrambleBytes[pos % scrambleBytes.length]);
-        }
-
+        byte[] xorBuffer = CommandUtils.xor(passBytes, scramble.getBytes());
         byte[] encrypted = encrypt(xorBuffer, key, RSA_METHOD);
+
         return encrypted;
     }
 
