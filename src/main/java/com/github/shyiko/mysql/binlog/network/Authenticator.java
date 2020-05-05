@@ -54,7 +54,7 @@ public class Authenticator {
     }
 
     public void authenticate() throws IOException {
-        logger.log(Level.INFO, "Begin auth for " + username);
+        logger.log(Level.FINE, "Begin auth for " + username);
         int collation = greetingPacket.getServerCollation();
 
         Command authenticateCommand;
@@ -68,7 +68,7 @@ public class Authenticator {
 
         channel.write(authenticateCommand);
         readResult();
-        logger.log(Level.INFO, "Auth complete " + username);
+        logger.log(Level.FINE, "Auth complete " + username);
     }
 
     private void readResult() throws IOException {
@@ -103,11 +103,12 @@ public class Authenticator {
 
         switch(stream.read()) {
             case 0x03:
-                logger.log(Level.INFO, "caching auth successful");
+                logger.log(Level.FINE, "cached sha2 auth successful");
                 // successful fast authentication
                 readResult();
                 return;
             case 0x04:
+                logger.log(Level.FINE, "cached sha2 auth not successful, moving to full auth path");
                 continueCachingSHA2Authentication();
         }
     }
@@ -134,6 +135,7 @@ public class Authenticator {
                     byte[] rsaKey = new byte[stream.available()];
                     stream.read(rsaKey);
 
+                    logger.log(Level.FINE, "received RSA key: " + rsaKey);
                     Command c = new AuthenticateSHA2RSAPasswordCommand(new String(rsaKey), password, scramble);
                     channel.write(c);
 
