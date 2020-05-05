@@ -152,6 +152,11 @@ public class BinaryLogClientIntegrationTest {
             }
         });
         eventListener.waitFor(EventType.QUERY, 2, DEFAULT_TIMEOUT);
+
+        if ( mysqlVersion.atLeast(8, 0) ) {
+            setupMysql8Login(master);
+            eventListener.waitFor(EventType.QUERY, 2, DEFAULT_TIMEOUT);
+        }
     }
 
     @BeforeMethod
@@ -1002,11 +1007,9 @@ public class BinaryLogClientIntegrationTest {
         }
     }
 
-    private BinaryLogClient setupMysql8Login(MySQLConnection server) throws Exception {
+    private void setupMysql8Login(MySQLConnection server) throws Exception {
         server.execute("create user 'mysql8' IDENTIFIED WITH caching_sha2_password BY 'testpass'");
         server.execute("grant replication slave, replication client on *.* to 'mysql8'");
-
-        return new BinaryLogClient(server.hostname, server.port, "mysql8", "testpass");
     }
 
     @Test
@@ -1014,7 +1017,7 @@ public class BinaryLogClientIntegrationTest {
         if ( !mysqlVersion.atLeast(8, 0) )
             throw new SkipException("skipping mysql8 auth test");
 
-        BinaryLogClient client = setupMysql8Login(master);
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
         client.setSSLMode(SSLMode.PREFERRED);
         client.connect(DEFAULT_TIMEOUT);
     }
@@ -1024,7 +1027,7 @@ public class BinaryLogClientIntegrationTest {
         if ( !mysqlVersion.atLeast(8, 0) )
             throw new SkipException("skipping mysql8 auth test");
 
-        BinaryLogClient client = setupMysql8Login(master);
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
         client.setSSLMode(SSLMode.PREFERRED);
         client.connect(DEFAULT_TIMEOUT);
 
@@ -1047,9 +1050,10 @@ public class BinaryLogClientIntegrationTest {
 
         MySQLConnection cx = new MySQLConnection("127.0.0.1", server.getPort(), "root", "");
 
-        BinaryLogClient client = setupMysql8Login(cx);
-        client.setSSLMode(SSLMode.PREFERRED);
-        client.connect(DEFAULT_TIMEOUT);
+        setupMysql8Login(cx);
+        BinaryLogClient c = new BinaryLogClient(cx.hostname, cx.port, "mysql8", "testpass");
+        c.setSSLMode(SSLMode.PREFERRED);
+        c.connect(DEFAULT_TIMEOUT);
 
         server.shutDown();
     }
@@ -1059,7 +1063,7 @@ public class BinaryLogClientIntegrationTest {
         if ( !mysqlVersion.atLeast(8, 0) )
             throw new SkipException("skipping mysql8 auth test");
 
-        BinaryLogClient client = setupMysql8Login(master);
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
         client.connect(DEFAULT_TIMEOUT);
     }
 
