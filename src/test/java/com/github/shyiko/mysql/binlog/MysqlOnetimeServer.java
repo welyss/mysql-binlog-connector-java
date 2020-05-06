@@ -59,7 +59,7 @@ public class MysqlOnetimeServer {
 
 		String authPlugin = "";
 
-		if ( getVersion().atLeast(8, 0) ) {
+		if ( getVersion().atLeast(8, 0) && !xtraParams.contains("--default-authentication-plugin")) {
 			authPlugin = "--default-authentication-plugin=mysql_native_password";
 		}
 

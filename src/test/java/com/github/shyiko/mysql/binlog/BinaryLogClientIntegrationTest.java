@@ -32,8 +32,10 @@ import com.github.shyiko.mysql.binlog.event.deserialization.QueryEventDataDeseri
 import com.github.shyiko.mysql.binlog.io.BufferedSocketInputStream;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
+import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.shyiko.mysql.binlog.network.ServerException;
 import com.github.shyiko.mysql.binlog.network.SocketFactory;
+import com.mysql.cj.MysqlConnection;
 import org.mockito.InOrder;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -150,6 +152,11 @@ public class BinaryLogClientIntegrationTest {
             }
         });
         eventListener.waitFor(EventType.QUERY, 2, DEFAULT_TIMEOUT);
+
+        if ( mysqlVersion.atLeast(8, 0) ) {
+            setupMysql8Login(master);
+            eventListener.waitFor(EventType.QUERY, 2, DEFAULT_TIMEOUT);
+        }
     }
 
     @BeforeMethod
@@ -844,6 +851,7 @@ public class BinaryLogClientIntegrationTest {
         String prefix = "jdbc.mysql.replication.";
         String slaveUsername = bundle.getString(prefix + "slave.slaveUsername");
         String slavePassword = bundle.getString(prefix + "slave.slavePassword");
+
         new BinaryLogClient(slave.hostname, slave.port, slaveUsername, slavePassword).connect();
     }
 
@@ -998,6 +1006,66 @@ public class BinaryLogClientIntegrationTest {
         } finally {
             client.connect(DEFAULT_TIMEOUT);
         }
+    }
+
+    private void setupMysql8Login(MySQLConnection server) throws Exception {
+        server.execute("create user 'mysql8' IDENTIFIED WITH caching_sha2_password BY 'testpass'");
+        server.execute("grant replication slave, replication client on *.* to 'mysql8'");
+    }
+
+    @Test
+    public void testMysql8Auth() throws Exception {
+        if ( !mysqlVersion.atLeast(8, 0) )
+            throw new SkipException("skipping mysql8 auth test");
+
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
+        client.setSSLMode(SSLMode.PREFERRED);
+        client.connect(DEFAULT_TIMEOUT);
+    }
+
+    @Test
+    public void testMysql8FastAuth() throws Exception {
+        if ( !mysqlVersion.atLeast(8, 0) )
+            throw new SkipException("skipping mysql8 auth test");
+
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
+        client.setSSLMode(SSLMode.PREFERRED);
+        client.connect(DEFAULT_TIMEOUT);
+
+        client.disconnect();
+
+        // this call should hit the sha2 cache
+        client.connect(DEFAULT_TIMEOUT);
+    }
+
+
+    @Test
+    public void testSHA2CachingAuthAsDefault() throws Exception {
+        if ( !mysqlVersion.atLeast(8, 0) )
+            throw new SkipException("skipping mysql8 auth test");
+
+        MysqlOnetimeServerOptions opts = new MysqlOnetimeServerOptions();
+        opts.extraParams = "--default-authentication-plugin=caching_sha2_password";
+        MysqlOnetimeServer server = new MysqlOnetimeServer(opts);
+        server.boot();
+
+        MySQLConnection cx = new MySQLConnection("127.0.0.1", server.getPort(), "root", "");
+
+        setupMysql8Login(cx);
+        BinaryLogClient c = new BinaryLogClient(cx.hostname, cx.port, "mysql8", "testpass");
+        c.setSSLMode(SSLMode.PREFERRED);
+        c.connect(DEFAULT_TIMEOUT);
+
+        server.shutDown();
+    }
+
+    @Test
+    public void testSHA2CachingWithoutSSL() throws Exception {
+        if ( !mysqlVersion.atLeast(8, 0) )
+            throw new SkipException("skipping mysql8 auth test");
+
+        BinaryLogClient client = new BinaryLogClient(master.hostname, master.port, "mysql8", "testpass");
+        client.connect(DEFAULT_TIMEOUT);
     }
 
     @Test
