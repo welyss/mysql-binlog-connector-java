@@ -170,6 +170,8 @@ public class Authenticator {
             this.scramble = buffer.readZeroTerminatedString();
             Command authCommand = new AuthenticateSHA2Command(scramble, password);
             channel.write(authCommand);
+        } else {
+            throw new AuthenticationException("unsupported authentication method: " + authName);
         }
 
         readResult();

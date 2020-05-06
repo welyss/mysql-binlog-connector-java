@@ -851,6 +851,7 @@ public class BinaryLogClientIntegrationTest {
         String prefix = "jdbc.mysql.replication.";
         String slaveUsername = bundle.getString(prefix + "slave.slaveUsername");
         String slavePassword = bundle.getString(prefix + "slave.slavePassword");
+
         new BinaryLogClient(slave.hostname, slave.port, slaveUsername, slavePassword).connect();
     }
 
