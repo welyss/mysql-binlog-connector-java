@@ -141,7 +141,6 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private boolean useBinlogFilenamePositionInGtidMode;
     private String gtid;
     private boolean tx;
-    private boolean isSSL;
 
     private EventDeserializer eventDeserializer = new EventDeserializer();
 
