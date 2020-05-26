@@ -411,7 +411,6 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         return inputStream.read(blobLength);
     }
 
-    // checkstyle, please ignore ParameterNumber for the next line
     protected Long asUnixTime(int year, int month, int day, int hour, int minute, int second, int millis) {
         // https://dev.mysql.com/doc/refman/5.0/en/datetime.html
         if (year == 0 || month == 0 || day == 0) {
