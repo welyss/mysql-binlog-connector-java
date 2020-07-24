@@ -833,6 +833,12 @@ public class BinaryLogClientIntegrationTest {
         client.connect();
     }
 
+    @Test(expectedExceptions = IOException.class)
+    public void testExceptionIsThrownWhenTryingToConnectAlreadyConnectedClientWithTimeout() throws Exception {
+        assertTrue(client.isConnected());
+        client.connect(1000);
+    }
+
     @Test
     public void testExceptionIsThrownWhenProvidedWithWrongCredentials() throws Exception {
         BinaryLogClient binaryLogClient =
