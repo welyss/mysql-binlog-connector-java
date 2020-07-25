@@ -837,6 +837,9 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 try {
                     setConnectTimeout(timeout);
                     connect();
+                } catch (IOException e) {
+                    exceptionReference.set(e);
+                    countDownLatch.countDown(); // making sure we don't end up waiting whole "timeout"
                 } catch (Exception e) {
                     exceptionReference.set(new IOException(e)); // method is asynchronous, catch all exceptions so that they are not lost
                     countDownLatch.countDown(); // making sure we don't end up waiting whole "timeout"
