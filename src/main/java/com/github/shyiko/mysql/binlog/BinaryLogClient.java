@@ -495,8 +495,9 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
      * @throws AuthenticationException if authentication fails
      * @throws ServerException if MySQL server responds with an error
      * @throws IOException if anything goes wrong while trying to connect
+     * @throws IllegalStateException if binary log client is already connected
      */
-    public void connect() throws IOException {
+    public void connect() throws IOException, IllegalStateException {
         if (!connectLock.tryLock()) {
             throw new IllegalStateException("BinaryLogClient is already connected");
         }
@@ -836,8 +837,8 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 try {
                     setConnectTimeout(timeout);
                     connect();
-                } catch (IOException e) {
-                    exceptionReference.set(e);
+                } catch (Exception e) {
+                    exceptionReference.set(new IOException(e)); // method is asynchronous, catch all exceptions so that they are not lost
                     countDownLatch.countDown(); // making sure we don't end up waiting whole "timeout"
                 }
             }
