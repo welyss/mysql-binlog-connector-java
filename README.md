@@ -27,9 +27,9 @@ Get the latest JAR(s) from [here](http://search.maven.org/#search%7Cga%7C1%7Cg%3
 
 ```xml
 <dependency>
-    <groupId>com.github.shyiko</groupId>
+    <groupId>com.zendesk</groupId>
     <artifactId>mysql-binlog-connector-java</artifactId>
-    <version>0.18.1</version>
+    <version>0.23.2</version>
 </dependency>
 ```
 
