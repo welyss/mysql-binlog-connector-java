@@ -23,7 +23,7 @@ but ended up as a complete rewrite. Key differences/features:
 
 ## Usage
 
-Get the latest JAR(s) from [here](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.shyiko%22%20AND%20a%3A%22mysql-binlog-connector-java%22). Alternatively you can include following Maven dependency (available through Maven Central):
+Get the latest JAR(s) from [here](https://search.maven.org/search?q=g:com.zendesk%20AND%20a:mysql-binlog-connector-java). Alternatively you can include following Maven dependency (available through Maven Central):
 
 ```xml
 <dependency>
