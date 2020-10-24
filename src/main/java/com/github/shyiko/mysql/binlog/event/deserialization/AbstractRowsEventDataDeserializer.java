@@ -75,6 +75,7 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
     private Long invalidDateAndTimeRepresentation;
     private boolean microsecondsPrecision;
     private boolean deserializeCharAndBinaryAsByteArray;
+    private boolean deserializeIntegerAsByteArray;
 
     public AbstractRowsEventDataDeserializer(Map<Long, TableMapEventData> tableMapEventByTableId) {
         this.tableMapEventByTableId = tableMapEventByTableId;
@@ -95,6 +96,10 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
 
     void setDeserializeCharAndBinaryAsByteArray(boolean value) {
         this.deserializeCharAndBinaryAsByteArray = value;
+    }
+
+    void setDeserializeIntegerAsByteArray(boolean deserializeIntegerAsByteArray) {
+        this.deserializeIntegerAsByteArray = deserializeIntegerAsByteArray;
     }
 
     protected Serializable[] deserializeRow(long tableId, BitSet includedColumns, ByteArrayInputStream inputStream)
@@ -203,22 +208,37 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
     }
 
     protected Serializable deserializeTiny(ByteArrayInputStream inputStream) throws IOException {
+        if (deserializeIntegerAsByteArray) {
+            return inputStream.read(1);
+        }
         return (int) ((byte) inputStream.readInteger(1));
     }
 
     protected Serializable deserializeShort(ByteArrayInputStream inputStream) throws IOException {
+        if (deserializeIntegerAsByteArray) {
+            return inputStream.read(2);
+        }
         return (int) ((short) inputStream.readInteger(2));
     }
 
     protected Serializable deserializeInt24(ByteArrayInputStream inputStream) throws IOException {
+        if (deserializeIntegerAsByteArray) {
+            return inputStream.read(3);
+        }
         return (inputStream.readInteger(3) << 8) >> 8;
     }
 
     protected Serializable deserializeLong(ByteArrayInputStream inputStream) throws IOException {
+        if (deserializeIntegerAsByteArray) {
+            return inputStream.read(4);
+        }
         return inputStream.readInteger(4);
     }
 
     protected Serializable deserializeLongLong(ByteArrayInputStream inputStream) throws IOException {
+        if (deserializeIntegerAsByteArray) {
+            return inputStream.read(8);
+        }
         return inputStream.readLong(8);
     }
 
