@@ -422,6 +422,44 @@ public class BinaryLogClientIntegrationTest {
     }
 
     @Test
+    public void testDeserializationOfIntegerAsByteArray() throws Exception {
+        final BinaryLogClient client = new BinaryLogClient(slave.hostname, slave.port,
+            slave.username, slave.password);
+        EventDeserializer eventDeserializer = new EventDeserializer();
+        eventDeserializer.setCompatibilityMode(CompatibilityMode.INTEGER_AS_BYTE_ARRAY);
+        client.setEventDeserializer(eventDeserializer);
+        client.connect(DEFAULT_TIMEOUT);
+        try {
+            assertEquals(writeAndCaptureRow("tinyint unsigned", "0", "1", "255"),
+                new Serializable[]{new byte[]{0}, new byte[]{1}, new byte[]{-1}});
+            assertEquals(writeAndCaptureRow("tinyint", "-128", "-1", "0", "1", "127"),
+                new Serializable[]{new byte[]{-0x80}, new byte[]{-1}, new byte[]{0}, new byte[]{1}, new byte[]{0x7f}});
+
+            assertEquals(writeAndCaptureRow("smallint unsigned", "0", "1", "65535"),
+                new Serializable[]{new byte[]{0, 0}, new byte[]{0, 1}, new byte[]{-1, -1}});
+            assertEquals(writeAndCaptureRow("smallint", "-32768", "-1", "0", "1", "32767"),
+                new Serializable[]{new byte[]{-0x80, 0}, new byte[]{-1, -1}, new byte[]{0, 0}, new byte[]{0, 1}, new byte[]{0x7f, -1}});
+
+            assertEquals(writeAndCaptureRow("mediumint unsigned", "0", "1", "16777215"),
+                new Serializable[]{new byte[]{0, 0, 0}, new byte[]{0, 0, 1}, new byte[]{-1, -1, -1}});
+            assertEquals(writeAndCaptureRow("mediumint", "-8388608", "-1", "0", "1", "8388607"),
+                new Serializable[]{new byte[]{-0x80, 0, 0}, new byte[]{-1, -1, -1}, new byte[]{0, 0, 0}, new byte[]{0, 0, 1}, new byte[]{0x7f, -1, -1}});
+
+            assertEquals(writeAndCaptureRow("int unsigned", "0", "1", "4294967295"),
+                new Serializable[]{new byte[]{0, 0, 0, 0}, new byte[]{0, 0, 0, 1}, new byte[]{-1, -1, -1, -1}});
+            assertEquals(writeAndCaptureRow("int", "-2147483648", "-1", "0", "1", "2147483647"),
+                new Serializable[]{new byte[]{-0x80, 0, 0, 0}, new byte[]{-1, -1, -1, -1}, new byte[]{0, 0, 0, 0}, new byte[]{0, 0, 0, 1}, new byte[]{0x7f, -1, -1, -1}});
+
+            assertEquals(writeAndCaptureRow("bigint unsigned", "0", "1", "18446744073709551615"),
+                new Serializable[]{new byte[]{0, 0, 0, 0, 0, 0, 0, 0}, new byte[]{0, 0, 0, 0, 0, 0, 0, 1}, new byte[]{-1, -1, -1, -1, -1, -1, -1, -1}});
+            assertEquals(writeAndCaptureRow("bigint", "-9223372036854775808", "-1", "0", "1", "9223372036854775807"),
+                new Serializable[]{new byte[]{-0x80, 0, 0, 0, 0, 0, 0, 0}, new byte[]{-1, -1, -1, -1, -1, -1, -1, -1}, new byte[]{0, 0, 0, 0, 0, 0, 0, 0}, new byte[]{0, 0, 0, 0, 0, 0, 0, 1},  new byte[]{0x7f, -1, -1, -1, -1, -1, -1, -1}});
+        } finally {
+            client.disconnect();
+        }
+    }
+
+    @Test
     public void testDeserializationOfDateAndTimeAsLongMicrosecondsPrecision() throws Exception {
         final BinaryLogClient client = new BinaryLogClient(slave.hostname, slave.port,
             slave.username, slave.password);
