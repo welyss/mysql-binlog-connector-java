@@ -430,30 +430,37 @@ public class BinaryLogClientIntegrationTest {
         client.setEventDeserializer(eventDeserializer);
         client.connect(DEFAULT_TIMEOUT);
         try {
-            assertEquals(writeAndCaptureRow("tinyint unsigned", "0", "1", "255"),
-                new Serializable[]{new byte[]{0}, new byte[]{1}, new byte[]{-1}});
-            assertEquals(writeAndCaptureRow("tinyint", "-128", "-1", "0", "1", "127"),
-                new Serializable[]{new byte[]{-0x80}, new byte[]{-1}, new byte[]{0}, new byte[]{1}, new byte[]{0x7f}});
+            Serializable[] result;
 
-            assertEquals(writeAndCaptureRow("smallint unsigned", "0", "1", "65535"),
-                new Serializable[]{new byte[]{0, 0}, new byte[]{0, 1}, new byte[]{-1, -1}});
-            assertEquals(writeAndCaptureRow("smallint", "-32768", "-1", "0", "1", "32767"),
-                new Serializable[]{new byte[]{-0x80, 0}, new byte[]{-1, -1}, new byte[]{0, 0}, new byte[]{0, 1}, new byte[]{0x7f, -1}});
+            result = writeAndCaptureRow("tinyint unsigned", "0", "1", "255");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
 
-            assertEquals(writeAndCaptureRow("mediumint unsigned", "0", "1", "16777215"),
-                new Serializable[]{new byte[]{0, 0, 0}, new byte[]{0, 0, 1}, new byte[]{-1, -1, -1}});
-            assertEquals(writeAndCaptureRow("mediumint", "-8388608", "-1", "0", "1", "8388607"),
-                new Serializable[]{new byte[]{-0x80, 0, 0}, new byte[]{-1, -1, -1}, new byte[]{0, 0, 0}, new byte[]{0, 0, 1}, new byte[]{0x7f, -1, -1}});
 
-            assertEquals(writeAndCaptureRow("int unsigned", "0", "1", "4294967295"),
-                new Serializable[]{new byte[]{0, 0, 0, 0}, new byte[]{0, 0, 0, 1}, new byte[]{-1, -1, -1, -1}});
-            assertEquals(writeAndCaptureRow("int", "-2147483648", "-1", "0", "1", "2147483647"),
-                new Serializable[]{new byte[]{-0x80, 0, 0, 0}, new byte[]{-1, -1, -1, -1}, new byte[]{0, 0, 0, 0}, new byte[]{0, 0, 0, 1}, new byte[]{0x7f, -1, -1, -1}});
+            result = writeAndCaptureRow("tinyint", "-128", "-1", "0", "1", "127");
+            assertEquals(result[0], -128);
+            assertEquals(result[1], -1);
+            assertEquals(result[2], 0);
+            assertEquals(result[3], 1);
+            assertEquals(result[4], 127);
 
-            assertEquals(writeAndCaptureRow("bigint unsigned", "0", "1", "18446744073709551615"),
-                new Serializable[]{new byte[]{0, 0, 0, 0, 0, 0, 0, 0}, new byte[]{0, 0, 0, 0, 0, 0, 0, 1}, new byte[]{-1, -1, -1, -1, -1, -1, -1, -1}});
-            assertEquals(writeAndCaptureRow("bigint", "-9223372036854775808", "-1", "0", "1", "9223372036854775807"),
-                new Serializable[]{new byte[]{-0x80, 0, 0, 0, 0, 0, 0, 0}, new byte[]{-1, -1, -1, -1, -1, -1, -1, -1}, new byte[]{0, 0, 0, 0, 0, 0, 0, 0}, new byte[]{0, 0, 0, 0, 0, 0, 0, 1},  new byte[]{0x7f, -1, -1, -1, -1, -1, -1, -1}});
+            result = writeAndCaptureRow("smallint unsigned", "0", "1", "65535");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
+
+            result = writeAndCaptureRow("smallint", "-32768", "-1", "0", "1", "32767");
+            assertEquals(result[0], -32768);
+            assertEquals(result[1], -1);
+            assertEquals(result[2], 0);
+            assertEquals(result[3], 1);
+            assertEquals(result[4], 32767);
+
+            result = writeAndCaptureRow("mediumint unsigned", "0", "1", "16777215");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
         } finally {
             client.disconnect();
         }
