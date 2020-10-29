@@ -422,6 +422,51 @@ public class BinaryLogClientIntegrationTest {
     }
 
     @Test
+    public void testDeserializationOfIntegerAsByteArray() throws Exception {
+        final BinaryLogClient client = new BinaryLogClient(slave.hostname, slave.port,
+            slave.username, slave.password);
+        EventDeserializer eventDeserializer = new EventDeserializer();
+        eventDeserializer.setCompatibilityMode(CompatibilityMode.INTEGER_AS_BYTE_ARRAY);
+        client.setEventDeserializer(eventDeserializer);
+        client.connect(DEFAULT_TIMEOUT);
+        try {
+            Serializable[] result;
+
+            result = writeAndCaptureRow("tinyint unsigned", "0", "1", "255");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
+
+
+            result = writeAndCaptureRow("tinyint", "-128", "-1", "0", "1", "127");
+            assertEquals(result[0], -128);
+            assertEquals(result[1], -1);
+            assertEquals(result[2], 0);
+            assertEquals(result[3], 1);
+            assertEquals(result[4], 127);
+
+            result = writeAndCaptureRow("smallint unsigned", "0", "1", "65535");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
+
+            result = writeAndCaptureRow("smallint", "-32768", "-1", "0", "1", "32767");
+            assertEquals(result[0], -32768);
+            assertEquals(result[1], -1);
+            assertEquals(result[2], 0);
+            assertEquals(result[3], 1);
+            assertEquals(result[4], 32767);
+
+            result = writeAndCaptureRow("mediumint unsigned", "0", "1", "16777215");
+            assertEquals(result[0], 0);
+            assertEquals(result[1], 1);
+            assertEquals(result[2], -1);
+        } finally {
+            client.disconnect();
+        }
+    }
+
+    @Test
     public void testDeserializationOfDateAndTimeAsLongMicrosecondsPrecision() throws Exception {
         final BinaryLogClient client = new BinaryLogClient(slave.hostname, slave.port,
             slave.username, slave.password);

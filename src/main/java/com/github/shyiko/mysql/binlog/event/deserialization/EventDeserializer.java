@@ -200,6 +200,9 @@ public class EventDeserializer {
             deserializer.setDeserializeCharAndBinaryAsByteArray(
                 compatibilitySet.contains(CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY)
             );
+            deserializer.setDeserializeIntegerAsByteArray(
+                compatibilitySet.contains(CompatibilityMode.INTEGER_AS_BYTE_ARRAY)
+            );
         }
     }
 
@@ -350,7 +353,11 @@ public class EventDeserializer {
          *
          * <p>This option is going to be enabled by default starting from mysql-binlog-connector-java@1.0.0.
          */
-        CHAR_AND_BINARY_AS_BYTE_ARRAY
+        CHAR_AND_BINARY_AS_BYTE_ARRAY,
+        /**
+         * Return TINY/SHORT/INT24/LONG/LONGLONG values as byte[]|s (instead of int|s).
+         */
+        INTEGER_AS_BYTE_ARRAY
     }
 
     /**
