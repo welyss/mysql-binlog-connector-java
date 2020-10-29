@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.23.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.23.2...0.23.3) - 2020-10-29
+
+- add EventDeserializer.CompatibilityMode.INTEGER_AS_BYTE_ARRAY if you want raw integer data
+- don't crash on AWS Aurora's unknown event types
+
+## [0.23.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.23.1...0.23.2) - 2020-07-25
+
+- `connect` now throws `IllegalStateException` when already connected
+
+## [0.23.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.22.2...0.23.1) - 2020-05-25
+
+- this releases adds support for mysql 8's `caching_sha2_password` authentication method
+
 ## [0.22.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.22.0...0.22.2) - 2020-04-29
 
 - Fix bugs in 0.22.0 involving nested JSON objects.
