@@ -77,6 +77,7 @@ public class AuthenticateSecurityPasswordCommand implements Command {
         if (schema != null) {
             buffer.writeZeroTerminatedString(schema);
         }
+        buffer.writeZeroTerminatedString("mysql_native_password");
         return buffer.toByteArray();
     }
 
