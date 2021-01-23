@@ -61,6 +61,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Interface for checking if a hostname matches the names stored inside the
@@ -221,6 +223,8 @@ public interface HostnameChecker extends javax.net.ssl.HostnameVerifier {
         };
 
     abstract class AbstractChecker implements HostnameChecker {
+        private final Logger logger = Logger.getLogger(getClass().getName());
+
         public static String[] getCNs(X509Certificate cert) {
             try {
                 final String subjectPrincipal = cert.getSubjectX500Principal().getName(X500Principal.RFC2253);
@@ -406,10 +410,19 @@ public interface HostnameChecker extends javax.net.ssl.HostnameVerifier {
             check(host, x509);
         }
 
+        private String commaJoin(String [] input) {
+            if ( input == null ) return "";
+            return String.join(",", Arrays.asList(input));
+        }
+
         public void check(String[] host, X509Certificate cert)
             throws SSLException {
             String[] cns = AbstractChecker.getCNs(cert);
             String[] subjectAlts = AbstractChecker.getDNSSubjectAlts(cert);
+            logger.log(Level.INFO,
+                "attempting to verify SSL identity '" + commaJoin(host) + "' " +
+                    "against cns: [" + commaJoin(cns) + "], " +
+                    "subject-alts: [" + commaJoin(subjectAlts) + "]");
             check(host, cns, subjectAlts);
         }
 
