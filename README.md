@@ -29,7 +29,7 @@ Get the latest JAR(s) from [here](https://search.maven.org/search?q=g:com.zendes
 <dependency>
     <groupId>com.zendesk</groupId>
     <artifactId>mysql-binlog-connector-java</artifactId>
-    <version>0.23.2</version>
+    <version>0.23.4</version>
 </dependency>
 ```
 
