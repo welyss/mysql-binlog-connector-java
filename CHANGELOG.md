@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.24.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.23.3...0.24.0) - 2021-02-04
+
+- Move up to JDK 11, drop support for JDK 8
+
+## [0.23.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.23.3...0.23.4) - 2021-01-17
+
+- correct authentication error that was causing a problem with Azure
+
 ## [0.23.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.23.2...0.23.3) - 2020-10-29
 
 - add EventDeserializer.CompatibilityMode.INTEGER_AS_BYTE_ARRAY if you want raw integer data
