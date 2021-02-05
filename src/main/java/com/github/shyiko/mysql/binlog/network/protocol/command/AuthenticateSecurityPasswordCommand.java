@@ -83,6 +83,9 @@ public class AuthenticateSecurityPasswordCommand implements Command {
 
     /**
      * see mysql/sql/password.c scramble(...)
+	 * @param password the password
+	 * @param salt salt received from server
+	 * @return hashed password
      */
     public static byte[] passwordCompatibleWithMySQL411(String password, String salt) {
         if ( "".equals(password) || password == null )

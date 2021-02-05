@@ -471,9 +471,6 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         return result;
     }
 
-    /**
-     * see mysql/strings/decimal.c
-     */
     public static BigDecimal asBigDecimal(int precision, int scale, byte[] value) {
         boolean positive = (value[0] & 0x80) == 0x80;
         value[0] ^= 0x80;

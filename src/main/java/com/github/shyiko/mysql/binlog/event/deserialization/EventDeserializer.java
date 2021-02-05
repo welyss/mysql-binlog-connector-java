@@ -153,6 +153,7 @@ public class EventDeserializer {
 
     /**
      * @deprecated resolved based on FORMAT_DESCRIPTION
+	 * @param checksumType don't use this function.
      */
     @Deprecated
     public void setChecksumType(ChecksumType checksumType) {
@@ -161,6 +162,8 @@ public class EventDeserializer {
 
     /**
      * @see CompatibilityMode
+	 * @param first at least one CompatabilityMode
+	 * @param rest many modes
      */
     public void setCompatibilityMode(CompatibilityMode first, CompatibilityMode... rest) {
         this.compatibilitySet = EnumSet.of(first, rest);
@@ -208,6 +211,8 @@ public class EventDeserializer {
 
     /**
      * @return deserialized event or null in case of end-of-stream
+	 * @param inputStream input stream to fetch event from
+	 * @throws IOException if connection gets closed
      */
     public Event nextEvent(ByteArrayInputStream inputStream) throws IOException {
         if (inputStream.peek() == -1) {

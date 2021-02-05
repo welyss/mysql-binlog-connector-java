@@ -172,6 +172,8 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Alias for BinaryLogClient("localhost", 3306, &lt;no schema&gt; = null, username, password).
      * @see BinaryLogClient#BinaryLogClient(String, int, String, String, String)
+	 * @param username login name
+	 * @param password password
      */
     public BinaryLogClient(String username, String password) {
         this("localhost", 3306, null, username, password);
@@ -180,6 +182,9 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Alias for BinaryLogClient("localhost", 3306, schema, username, password).
      * @see BinaryLogClient#BinaryLogClient(String, int, String, String, String)
+	 * @param schema database name, nullable
+	 * @param username login name
+	 * @param password password
      */
     public BinaryLogClient(String schema, String username, String password) {
         this("localhost", 3306, schema, username, password);
@@ -188,6 +193,10 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Alias for BinaryLogClient(hostname, port, &lt;no schema&gt; = null, username, password).
      * @see BinaryLogClient#BinaryLogClient(String, int, String, String, String)
+	 * @param hostname mysql server hostname
+     * @param port mysql server port
+	 * @param username login name
+	 * @param password password
      */
     public BinaryLogClient(String hostname, int port, String username, String password) {
         this(hostname, port, null, username, password);
@@ -332,6 +341,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * @see #setGtidSetFallbackToPurged(boolean)
+	 * @return whether gtid_purged is used as a fallback
      */
     public boolean isGtidSetFallbackToPurged() {
         return gtidSetFallbackToPurged;
@@ -347,6 +357,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * @see #setUseBinlogFilenamePositionInGtidMode(boolean)
+	 * @return value of useBinlogFilenamePostionInGtidMode
      */
     public boolean isUseBinlogFilenamePositionInGtidMode() {
         return useBinlogFilenamePositionInGtidMode;
@@ -1072,6 +1083,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Register event listener. Note that multiple event listeners will be called in order they
      * where registered.
+	 * @param eventListener event listener
      */
     public void registerEventListener(EventListener eventListener) {
         eventListeners.add(eventListener);
@@ -1079,6 +1091,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * Unregister all event listener of specific type.
+	 * @param listenerClass event listener class to unregister
      */
     public void unregisterEventListener(Class<? extends EventListener> listenerClass) {
         for (EventListener eventListener: eventListeners) {
@@ -1090,6 +1103,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * Unregister single event listener.
+	 * @param eventListener event listener to unregister
      */
     public void unregisterEventListener(EventListener eventListener) {
         eventListeners.remove(eventListener);
@@ -1120,6 +1134,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Register lifecycle listener. Note that multiple lifecycle listeners will be called in order they
      * where registered.
+	 * @param lifecycleListener lifecycle listener to register
      */
     public void registerLifecycleListener(LifecycleListener lifecycleListener) {
         lifecycleListeners.add(lifecycleListener);
@@ -1127,6 +1142,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * Unregister all lifecycle listener of specific type.
+	 * @param listenerClass lifecycle listener class to unregister
      */
     public void unregisterLifecycleListener(Class<? extends LifecycleListener> listenerClass) {
         for (LifecycleListener lifecycleListener : lifecycleListeners) {
@@ -1138,6 +1154,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     /**
      * Unregister single lifecycle listener.
+	 * @param eventListener lifecycle listener to unregister
      */
     public void unregisterLifecycleListener(LifecycleListener eventListener) {
         lifecycleListeners.remove(eventListener);
@@ -1215,23 +1232,29 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
         /**
          * Called once client has successfully logged in but before started to receive binlog events.
+		 * @param client the client that logged in
          */
         void onConnect(BinaryLogClient client);
 
         /**
          * It's guarantied to be called before {@link #onDisconnect(BinaryLogClient)}) in case of
          * communication failure.
+		 * @param client the client that triggered the communication failure
+		 * @param ex The exception that triggered the communication failutre
          */
         void onCommunicationFailure(BinaryLogClient client, Exception ex);
 
         /**
          * Called in case of failed event deserialization. Note this type of error does NOT cause client to
          * disconnect. If you wish to stop receiving events you'll need to fire client.disconnect() manually.
+		 * @param client the client that failed event deserialization
+		 * @param ex The exception that triggered the failutre
          */
         void onEventDeserializationFailure(BinaryLogClient client, Exception ex);
 
         /**
          * Called upon disconnect (regardless of the reason).
+		 * @param client the client that disconnected
          */
         void onDisconnect(BinaryLogClient client);
     }

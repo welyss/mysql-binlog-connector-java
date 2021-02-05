@@ -80,8 +80,6 @@ import java.nio.charset.Charset;
  * <h2>Grammar</h2>
  * The grammar of the binary representation of JSON objects are defined in the MySQL codebase in the
  * <a href="https://github.com/mysql/mysql-server/blob/5.7/sql/json_binary.h">json_binary.h</a> file:
- * <p>
- *
  * <pre>
  *   doc ::= type value
  *   type ::=
@@ -662,7 +660,6 @@ public class JsonBinary {
      * See the <a href=
      * "https://github.com/mysql/mysql-server/blob/e0e0ae2ea27c9bb76577664845507ef224d362e4/sql/json_binary.cc#L1034">
      * MySQL source code</a> for the logic used in this method.
-     * <p>
      * <h3>Grammar</h3>
      *
      * <pre>
@@ -958,6 +955,7 @@ public class JsonBinary {
      * to 16383, and so on...
      *
      * @return the integer value
+	 * @throws IOException if we don't encounter an end-of-int marker
      */
     protected int readVariableInt() throws IOException {
         int length = 0;

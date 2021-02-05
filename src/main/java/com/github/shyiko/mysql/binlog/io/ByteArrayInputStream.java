@@ -41,6 +41,9 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Read int written in little-endian format.
+	 * @param length length of the integer to read
+	 * @throws IOException in case of EOF
+	 * @return the integer from the binlog
      */
     public int readInteger(int length) throws IOException {
         int result = 0;
@@ -52,6 +55,9 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Read long written in little-endian format.
+	 * @param length length of the long to read
+	 * @throws IOException in case of EOF
+	 * @return the long from the binlog
      */
     public long readLong(int length) throws IOException {
         long result = 0;
@@ -63,6 +69,9 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Read fixed length string.
+	 * @param length length of string to read
+	 * @throws IOException in case of EOF
+	 * @return string
      */
     public String readString(int length) throws IOException {
         return new String(read(length));
@@ -70,6 +79,8 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Read variable-length string. Preceding packed integer indicates the length of the string.
+	 * @throws IOException in case of EOF
+	 * @return string
      */
     public String readLengthEncodedString() throws IOException {
         return readString(readPackedInteger());
@@ -77,6 +88,8 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * Read variable-length string. End is indicated by 0x00 byte.
+	 * @throws IOException in case of EOF
+	 * @return string
      */
     public String readZeroTerminatedString() throws IOException {
         ByteArrayOutputStream s = new ByteArrayOutputStream();
@@ -128,6 +141,8 @@ public class ByteArrayInputStream extends InputStream {
 
     /**
      * @see #readPackedNumber()
+	 * @throws IOException in case of malformed number, eof, null, or long
+	 * @return integer
      */
     public int readPackedInteger() throws IOException {
         Number number = readPackedNumber();
@@ -141,12 +156,14 @@ public class ByteArrayInputStream extends InputStream {
     }
 
     /**
-     * Format (first-byte-based):<br/>
-     * 0-250 - The first byte is the number (in the range 0-250). No additional bytes are used.<br/>
-     * 251 - SQL NULL value<br/>
-     * 252 - Two more bytes are used. The number is in the range 251-0xffff.<br/>
-     * 253 - Three more bytes are used. The number is in the range 0xffff-0xffffff.<br/>
+     * Format (first-byte-based):<br>
+     * 0-250 - The first byte is the number (in the range 0-250). No additional bytes are used.<br>
+     * 251 - SQL NULL value<br>
+     * 252 - Two more bytes are used. The number is in the range 251-0xffff.<br>
+     * 253 - Three more bytes are used. The number is in the range 0xffff-0xffffff.<br>
      * 254 - Eight more bytes are used. The number is in the range 0xffffff-0xffffffffffffffff.
+	 * @throws IOException in case of malformed number or EOF
+	 * @return long or null
      */
     public Number readPackedNumber() throws IOException {
         int b = this.read();
