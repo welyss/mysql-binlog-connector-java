@@ -241,4 +241,9 @@ public class ByteArrayInputStream extends InputStream {
         pos = markPosition;
         inputStream.reset();
     }
+
+    public synchronized long fastSkip(long n) throws IOException {
+        pos += (int) n;
+        return inputStream.skip(n);
+    }
 }
