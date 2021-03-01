@@ -242,8 +242,25 @@ public class ByteArrayInputStream extends InputStream {
         inputStream.reset();
     }
 
+    /**
+     * This method implements fast-forward skipping in the stream.
+     * It can be used if and only if the underlying stream is fully available till its end.
+     * In other cases the regular {@link #skip(long)} method must be used.
+     *
+     * @param n - number of bytes to skip
+     * @return number of bytes skipped
+     * @throws IOException
+     */
     public synchronized long fastSkip(long n) throws IOException {
-        pos += (int) n;
-        return inputStream.skip(n);
-    }
+        long skipOf = n;
+        if (blockLength != -1) {
+            skipOf = Math.min(blockLength, skipOf);
+            blockLength -= skipOf;
+            if (blockLength == 0) {
+                blockLength = -1;
+            }
+        }
+        pos += (int) skipOf;
+        return inputStream.skip(skipOf);
+     }
 }
