@@ -403,7 +403,7 @@ public class JsonBinary {
             } else {
                 // Parse the value ...
                 this.reader.reset();
-                this.reader.skip(objectOffset + entry.index);
+                this.reader.fastSkip(objectOffset + entry.index);
                 parse(entry.type, formatter);
             }
         }
@@ -537,7 +537,7 @@ public class JsonBinary {
             } else {
                 // Parse the value ...
                 this.reader.reset();
-                this.reader.skip(arrayOffset + entry.index);
+                this.reader.fastSkip(arrayOffset + entry.index);
 
                 parse(entry.type, formatter);
             }
