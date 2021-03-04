@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.25.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.24.1...0.25.0) - 2021-03-04
+
+- bring back jdk 8 support, this caused... ahem.  Issues.
+
 ## [0.24.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.24.0...0.24.1) - 2021-03-03
 
 - Fix for performance issues read JSON columns
