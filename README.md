@@ -1,7 +1,8 @@
 # mysql-binlog-connector-java [![Build Status](https://travis-ci.org/shyiko/mysql-binlog-connector-java.svg?branch=master)](https://travis-ci.org/shyiko/mysql-binlog-connector-java) [![Coverage Status](https://coveralls.io/repos/shyiko/mysql-binlog-connector-java/badge.svg?branch=master)](https://coveralls.io/r/shyiko/mysql-binlog-connector-java?branch=master) [![Maven Central](https://img.shields.io/maven-central/v/com.github.shyiko/mysql-binlog-connector-java.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.shyiko%22%20AND%20a%3A%22mysql-binlog-connector-java%22)
 
 
-MySQL Binary Log connector.
+MySQL Binary Log connector.  @osheroff's fork of @shiyko's project, probably
+the "official" version of this.  With help from the Debezium devs.
 
 Initially project was started as a fork of [open-replicator](https://code.google.com/p/open-replicator),
 but ended up as a complete rewrite. Key differences/features:
@@ -23,15 +24,16 @@ but ended up as a complete rewrite. Key differences/features:
 
 ## Usage
 
-Get the latest JAR(s) from [here](https://search.maven.org/search?q=g:com.zendesk%20AND%20a:mysql-binlog-connector-java). Alternatively you can include following Maven dependency (available through Maven Central):
 
 ```xml
 <dependency>
     <groupId>com.zendesk</groupId>
     <artifactId>mysql-binlog-connector-java</artifactId>
-    <version>0.23.4</version>
+    <version>0.25.0</version>
 </dependency>
 ```
+
+Or get the latest JAR(s) from [here](https://search.maven.org/search?q=g:com.zendesk%20AND%20a:mysql-binlog-connector-java).
 
 #### Reading binary log file
 
@@ -197,6 +199,7 @@ For the insight into the internals of MySQL look [here](https://dev.mysql.com/do
 Some of the OSS using / built on top of mysql-binlog-conector-java:
 * [apache/nifi](https://github.com/apache/nifi) An easy to use, powerful, and reliable system to process and distribute data.
 * [debezium](https://github.com/debezium/debezium) A low latency data streaming platform for change data capture (CDC).
+* [zendesk/maxwell](https://github.com/zendesk/maxwell) A MySQL-to-JSON Kafka producer.
 * [mavenlink/changestream](https://github.com/mavenlink/changestream) - A stream of changes for MySQL built on Akka.
 * [mardambey/mypipe](https://github.com/mardambey/mypipe) MySQL binary log consumer with the ability to act on changed rows and publish changes to different systems with emphasis on Apache Kafka.
 * [ngocdaothanh/mydit](https://github.com/ngocdaothanh/mydit) MySQL to MongoDB data replicator.
@@ -204,7 +207,6 @@ Some of the OSS using / built on top of mysql-binlog-conector-java:
 * [shyiko/rook](https://github.com/shyiko/rook) Generic Change Data Capture (CDC) toolkit.
 * [streamsets/datacollector](https://github.com/streamsets/datacollector) Continuous big data ingestion infrastructure.
 * [twingly/ecco](https://github.com/twingly/ecco) MySQL replication binlog parser in JRuby.
-* [zendesk/maxwell](https://github.com/zendesk/maxwell) A MySQL-to-JSON Kafka producer.
 * [zzt93/syncer](https://github.com/zzt93/syncer) A tool sync & manipulate data from MySQL/MongoDB to ES/Kafka/MySQL, which make 'Eventual Consistency' promise.
 
 It's also used [on a large scale](https://twitter.com/atwinmutt/status/626816601078300672) in MailChimp. You can read about it [here](http://devs.mailchimp.com/blog/powering-mailchimp-pro-reporting/).

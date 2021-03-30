@@ -261,8 +261,6 @@ public class JsonBinary {
      * <a href="https://github.com/mysql/mysql-server/blob/5.7/sql/json_binary.h">json_binary.h</a> file:
      * <h3>Grammar</h3>
      *
-     * <h3>Grammar</h3>
-     *
      * <pre>
      *   value ::=
      *       object  |
