@@ -4,6 +4,16 @@
 MySQL Binary Log connector.  @osheroff's fork of @shiyko's project, probably
 the "official" version of this.  With help from the Debezium devs.
 
+## Usage
+
+```xml
+<dependency>
+    <groupId>com.zendesk</groupId>
+    <artifactId>mysql-binlog-connector-java</artifactId>
+    <version>0.25.0</version>
+</dependency>
+```
+
 Initially project was started as a fork of [open-replicator](https://code.google.com/p/open-replicator),
 but ended up as a complete rewrite. Key differences/features:
 
@@ -22,16 +32,6 @@ but ended up as a complete rewrite. Key differences/features:
 [siddontang/go-mysql](https://github.com/siddontang/go-mysql) (Go),
 [noplay/python-mysql-replication](https://github.com/noplay/python-mysql-replication) (Python).
 
-## Usage
-
-
-```xml
-<dependency>
-    <groupId>com.zendesk</groupId>
-    <artifactId>mysql-binlog-connector-java</artifactId>
-    <version>0.25.0</version>
-</dependency>
-```
 
 Or get the latest JAR(s) from [here](https://search.maven.org/search?q=g:com.zendesk%20AND%20a:mysql-binlog-connector-java).
 
