@@ -223,6 +223,50 @@ public class ByteArrayInputStream extends InputStream {
     }
 
     @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+
+        if (peek != null) {
+            b[off] = (byte)(int)peek;
+            off += 1;
+            len -= 1;
+        }
+
+        int read = readWithinBlockBoundaries(b, off, len);
+
+        if (read > 0) {
+            this.pos += read;
+        }
+
+        if (peek != null) {
+            peek = null;
+            read = read <= 0 ? 1 : read + 1;
+        }
+
+        return read;
+    }
+
+    private int readWithinBlockBoundaries(byte[] b, int off, int len) throws IOException {
+        if (blockLength == -1) {
+            return inputStream.read(b, off, len);
+        } else if (blockLength == 0) {
+            return -1;
+        }
+
+        int read = inputStream.read(b, off, Math.min(len, blockLength));
+        if (read > 0) {
+            blockLength -= read;
+        }
+        return read;
+    }
+
+    @Override
     public void close() throws IOException {
         inputStream.close();
     }
