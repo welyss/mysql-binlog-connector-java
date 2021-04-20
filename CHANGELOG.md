@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.25.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.0...0.25.1) - 2021-04-20
+
+- performance improves in ByteArrayInputStream#read
+
 ## [0.25.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.24.1...0.25.0) - 2021-03-04
 
 - bring back jdk 8 support, this caused... ahem.  Issues.
