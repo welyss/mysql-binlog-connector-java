@@ -554,14 +554,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                     }
                     binlogPosition = 4;
                 }
-                ChecksumType checksumType = fetchBinlogChecksum();
-                if (checksumType != ChecksumType.NONE) {
-                    confirmSupportOfChecksum(checksumType);
-                }
-                setMasterServerId();
-                if (heartbeatInterval > 0) {
-                    enableHeartbeat();
-                }
+                setupConnection();
                 gtid = null;
                 tx = false;
                 requestBinaryLogStream();
@@ -611,6 +604,20 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                     lifecycleListener.onDisconnect(this);
                 }
             }
+        }
+    }
+
+    /**
+     * Apply additional options for connection before requesting binlog stream.
+     */
+    protected void setupConnection() throws IOException {
+        ChecksumType checksumType = fetchBinlogChecksum();
+        if (checksumType != ChecksumType.NONE) {
+            confirmSupportOfChecksum(checksumType);
+        }
+        setMasterServerId();
+        if (heartbeatInterval > 0) {
+            enableHeartbeat();
         }
     }
 
