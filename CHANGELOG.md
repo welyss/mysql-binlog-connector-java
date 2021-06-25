@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.25.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.1...0.25.2) - 2021-06-25
+
+- allow `setupConnection()` to be overridden
+- upgrade to TLS v1.2
+
 ## [0.25.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.0...0.25.1) - 2021-04-20
 
 - performance improves in ByteArrayInputStream#read
