@@ -15,21 +15,9 @@
  */
 package com.github.shyiko.mysql.binlog;
 
-import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.shyiko.mysql.binlog.event.EventHeader;
-import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
-import com.github.shyiko.mysql.binlog.event.EventType;
-import com.github.shyiko.mysql.binlog.event.GtidEventData;
-import com.github.shyiko.mysql.binlog.event.QueryEventData;
-import com.github.shyiko.mysql.binlog.event.RotateEventData;
-import com.github.shyiko.mysql.binlog.event.deserialization.ChecksumType;
-import com.github.shyiko.mysql.binlog.event.deserialization.EventDataDeserializationException;
-import com.github.shyiko.mysql.binlog.event.deserialization.EventDataDeserializer;
-import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
+import com.github.shyiko.mysql.binlog.event.*;
+import com.github.shyiko.mysql.binlog.event.deserialization.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer.EventDataWrapper;
-import com.github.shyiko.mysql.binlog.event.deserialization.GtidEventDataDeserializer;
-import com.github.shyiko.mysql.binlog.event.deserialization.QueryEventDataDeserializer;
-import com.github.shyiko.mysql.binlog.event.deserialization.RotateEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import com.github.shyiko.mysql.binlog.jmx.BinaryLogClientMXBean;
 import com.github.shyiko.mysql.binlog.network.AuthenticationException;
@@ -46,15 +34,7 @@ import com.github.shyiko.mysql.binlog.network.protocol.GreetingPacket;
 import com.github.shyiko.mysql.binlog.network.protocol.Packet;
 import com.github.shyiko.mysql.binlog.network.protocol.PacketChannel;
 import com.github.shyiko.mysql.binlog.network.protocol.ResultSetRowPacket;
-import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateNativePasswordCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateSHA2Command;
-import com.github.shyiko.mysql.binlog.network.protocol.command.AuthenticateSecurityPasswordCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.Command;
-import com.github.shyiko.mysql.binlog.network.protocol.command.DumpBinaryLogCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.DumpBinaryLogGtidCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.PingCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.QueryCommand;
-import com.github.shyiko.mysql.binlog.network.protocol.command.SSLRequestCommand;
+import com.github.shyiko.mysql.binlog.network.protocol.command.*;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -141,6 +121,8 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private boolean useBinlogFilenamePositionInGtidMode;
     private String gtid;
     private boolean tx;
+    private boolean isMariadb = false;
+    private boolean mariadbSendAnnotateRowsEvent = false;
 
     private EventDeserializer eventDeserializer = new EventDeserializer();
 
@@ -335,7 +317,12 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             this.binlogFilename = "";
         }
         synchronized (gtidSetAccessLock) {
-            this.gtidSet = gtidSet != null ? new GtidSet(gtidSet) : null;
+            // mariadb GtidSet format will be domainId-serverId-sequence
+            if (gtidSet != null && !gtidSet.contains(":")) {
+                this.gtidSet = new MariadbGtidSet(gtidSet);
+            } else {
+                this.gtidSet = gtidSet != null ? new GtidSet(gtidSet) : null;
+            }
         }
     }
 
@@ -501,6 +488,19 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         this.threadFactory = threadFactory;
     }
 
+    public boolean isMariadbSendAnnotateRowsEvent() {
+        return mariadbSendAnnotateRowsEvent;
+    }
+
+    /**
+     * Only in Mariadb, if set true, the Slave server connects with the BINLOG_SEND_ANNOTATE_ROWS_EVENT flag (value is 2)
+     * in the COM_BINLOG_DUMP Slave Registration phase
+     * @param mariadbSendAnnotateRowsEvent
+     */
+    public void setMariadbSendAnnotateRowsEvent(boolean mariadbSendAnnotateRowsEvent) {
+        this.mariadbSendAnnotateRowsEvent = mariadbSendAnnotateRowsEvent;
+    }
+
     /**
      * Connect to the replication stream. Note that this method blocks until disconnected.
      * @throws AuthenticationException if authentication fails
@@ -538,10 +538,15 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 channel.authenticationComplete();
 
                 connectionId = greetingPacket.getThreadId();
+                isMariadb = greetingPacket.getServerVersion().toLowerCase().contains("mariadb");
                 if ("".equals(binlogFilename)) {
                     synchronized (gtidSetAccessLock) {
                         if (gtidSet != null && "".equals(gtidSet.toString()) && gtidSetFallbackToPurged) {
-                            gtidSet = new GtidSet(fetchGtidPurged());
+                            if (isMariadb) {
+                                gtidSet = new MariadbGtidSet(fetchGtidPurged());
+                            } else {
+                                gtidSet = new GtidSet(fetchGtidPurged());
+                            }
                         }
                     }
                 }
@@ -594,6 +599,11 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 if (gtidSet != null) {
                     ensureEventDataDeserializer(EventType.GTID, GtidEventDataDeserializer.class);
                     ensureEventDataDeserializer(EventType.QUERY, QueryEventDataDeserializer.class);
+                    if (isMariadb) {
+                        ensureEventDataDeserializer(EventType.ANNOTATE_ROWS, AnnotateRowsEventDataDeserializer.class);
+                        ensureEventDataDeserializer(EventType.MARIADB_GTID, MariadbGtidEventDataDeserializer.class);
+                        ensureEventDataDeserializer(EventType.MARIADB_GTID_LIST, MariadbGtidListEventDataDeserializer.class);
+                    }
                 }
             }
             listenForEventPackets();
@@ -730,10 +740,22 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         Command dumpBinaryLogCommand;
         synchronized (gtidSetAccessLock) {
             if (gtidSet != null) {
-                dumpBinaryLogCommand = new DumpBinaryLogGtidCommand(serverId,
-                    useBinlogFilenamePositionInGtidMode ? binlogFilename : "",
-                    useBinlogFilenamePositionInGtidMode ? binlogPosition : 4,
-                    gtidSet);
+                if (isMariadb) {
+                    channel.write(new QueryCommand("SET @mariadb_slave_capability=4"));
+                    checkError(channel.read());
+                    channel.write(new QueryCommand("SET @slave_connect_state = '" + gtidSet.toString() + "'"));
+                    checkError(channel.read());
+                    channel.write(new QueryCommand("SET @slave_gtid_strict_mode = 0"));
+                    checkError(channel.read());
+                    channel.write(new QueryCommand("SET @slave_gtid_ignore_duplicates = 0"));
+                    checkError(channel.read());
+                    dumpBinaryLogCommand = new DumpBinaryLogCommand(serverId, "", 0L, isMariadbSendAnnotateRowsEvent());
+                } else {
+                    dumpBinaryLogCommand = new DumpBinaryLogGtidCommand(serverId,
+                        useBinlogFilenamePositionInGtidMode ? binlogFilename : "",
+                        useBinlogFilenamePositionInGtidMode ? binlogPosition : 4,
+                        gtidSet);
+                }
             } else {
                 dumpBinaryLogCommand = new DumpBinaryLogCommand(serverId, binlogFilename, binlogPosition);
             }
@@ -1034,13 +1056,30 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 GtidEventData gtidEventData = (GtidEventData) EventDataWrapper.internal(event.getData());
                 gtid = gtidEventData.getGtid();
                 break;
+            case MARIADB_GTID:
+                MariadbGtidEventData mariadbGtidEventData =  (MariadbGtidEventData) EventDataWrapper.internal(event.getData());
+                mariadbGtidEventData.setServerId(eventHeader.getServerId());
+                gtid = mariadbGtidEventData.toString();
+                break;
+            case MARIADB_GTID_LIST:
+                MariadbGtidListEventData mariadbGtidListEventData =  (MariadbGtidListEventData) EventDataWrapper.internal(event.getData());
+                gtid = mariadbGtidListEventData.getMariaGTIDSet().toString();
+                break;
             case XID:
                 commitGtid();
                 tx = false;
                 break;
             case QUERY:
-                QueryEventData queryEventData = (QueryEventData) EventDataWrapper.internal(event.getData());
-                String sql = queryEventData.getSql();
+            case ANNOTATE_ROWS:
+                String sql;
+                if (eventHeader.getEventType() == EventType.QUERY) {
+                    QueryEventData queryEventData = (QueryEventData) EventDataWrapper.internal(event.getData());
+                    sql = queryEventData.getSql();
+                } else {
+                    AnnotateRowsEventData annotateRowsEventData = (AnnotateRowsEventData) EventDataWrapper.internal(event.getData());
+                    sql = annotateRowsEventData.getRowsQuery();
+                }
+
                 if (sql == null) {
                     break;
                 }
