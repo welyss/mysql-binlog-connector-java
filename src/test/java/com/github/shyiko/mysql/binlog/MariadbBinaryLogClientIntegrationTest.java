@@ -14,18 +14,15 @@ import static org.testng.Assert.assertNotEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
 /**
- * BinaryLogClientMariadbGTIDIntegrationTest.java
- *
- * @author winger[jackey.zhang@woqutech.com]
- * @create 2021-07-13 10:52 上午
+ * @author <a href="mailto:winger2049@gmail.com">Winger</a>
  */
-public class BinaryLogClientMariadbIntegrationTest {
+public class MariadbBinaryLogClientIntegrationTest {
 
     protected BinaryLogClientIntegrationTest.MySQLConnection master;
 
     @Test
     public void testMariadbUseGTIDAndAnnotateRowsEvent() throws Exception {
-        master = new BinaryLogClientIntegrationTest.MySQLConnection("127.0.0.1", 3306, "root", "123456");
+        master = new BinaryLogClientIntegrationTest.MySQLConnection("127.0.0.1", 3306, "root", "");
         master.execute(new BinaryLogClientIntegrationTest.Callback<Statement>() {
             @Override
             public void execute(Statement statement) throws SQLException {
@@ -48,9 +45,9 @@ public class BinaryLogClientMariadbIntegrationTest {
         });
 
         CountDownEventListener eventListener;
-        BinaryLogClient client = new BinaryLogClient("127.0.0.1", 3306, "root", "123456");
+        MariadbBinaryLogClient client = new MariadbBinaryLogClient("127.0.0.1", 3306, "root", "123456");
         client.setGtidSet(currentGtidPos[0]);
-        client.setMariadbSendAnnotateRowsEvent(true);
+        client.setUseSendAnnotateRowsEvent(true);
 
         EventDeserializer eventDeserializer = new EventDeserializer();
         eventDeserializer.setCompatibilityMode(EventDeserializer.CompatibilityMode.CHAR_AND_BINARY_AS_BYTE_ARRAY,
