@@ -1301,7 +1301,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     /**
      * Default (no-op) implementation of {@link LifecycleListener}.
      */
-        public static abstract class AbstractLifecycleListener implements LifecycleListener {
+    public static abstract class AbstractLifecycleListener implements LifecycleListener {
 
         public void onConnect(BinaryLogClient client) { }
 

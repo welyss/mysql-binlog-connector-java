@@ -1,10 +1,7 @@
 package com.github.shyiko.mysql.binlog;
 
-import com.github.shyiko.mysql.binlog.event.AnnotateRowsEventData;
-import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.deserialization.AnnotateRowsEventDataDeserializer;
-import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.MariadbGtidEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.MariadbGtidListEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.network.protocol.command.Command;
