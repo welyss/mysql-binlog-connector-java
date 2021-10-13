@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.25.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.3...0.25.4) - 2021-10-13
+
+- add debugging info to eof exception
+
+## [0.25.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.2...0.25.3) - 2021-07-29
+
+- support mysql 8's invisible columns
+
 ## [0.25.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.1...0.25.2) - 2021-06-25
 
 - allow `setupConnection()` to be overridden
