@@ -18,6 +18,7 @@ package com.github.shyiko.mysql.binlog.jmx;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeader;
+import com.github.shyiko.mysql.binlog.event.EventType;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +65,9 @@ public class BinaryLogClientStatistics implements BinaryLogClientStatisticsMXBea
         EventHeader eventHeader = lastEventHeader.get();
         if (timestamp == 0 || eventHeader == null) {
             return -1;
+        }
+        if (eventHeader.getEventType() == EventType.HEARTBEAT && eventHeader.getTimestamp() == 0) {
+            return 0;
         }
         return (timestamp - eventHeader.getTimestamp()) / 1000;
     }
