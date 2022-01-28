@@ -326,10 +326,11 @@ public class JsonBinary {
         int valueSize = small ? 2 : 4;
 
         // Read each key-entry, consisting of the offset and length of each key ...
-        int[] keyLengths = new int[numElements];
+        KeyEntry[] keys = new KeyEntry[numElements];
         for (int i = 0; i != numElements; ++i) {
-            readUnsignedIndex(numBytes, small, "key offset in"); // unused
-            keyLengths[i] = readUInt16();
+            keys[i] = new KeyEntry(
+                    readUnsignedIndex(numBytes, small, "key offset in"),
+                    readUInt16());
         }
 
         // Read each key value value-entry
@@ -374,9 +375,14 @@ public class JsonBinary {
         }
 
         // Read each key ...
-        String[] keys = new String[numElements];
         for (int i = 0; i != numElements; ++i) {
-            keys[i] = reader.readString(keyLengths[i]);
+            final int skipBytes = keys[i].index + objectOffset - reader.getPosition();
+            // Skip to a start of a field name if the current position does not point to it
+            // This can happen for MySQL 8
+            if (skipBytes != 0) {
+                reader.fastSkip(skipBytes);
+            }
+            keys[i].name = reader.readString(keys[i].length);
         }
 
         // Now parse the values ...
@@ -385,7 +391,7 @@ public class JsonBinary {
             if (i != 0) {
                 formatter.nextEntry();
             }
-            formatter.name(keys[i]);
+            formatter.name(keys[i].name);
             ValueEntry entry = entries[i];
             if (entry.resolved) {
                 Object value = entry.value;
@@ -994,6 +1000,26 @@ public class JsonBinary {
 
     protected static String asHex(int value) {
         return Integer.toHexString(value);
+    }
+
+    /**
+     * Class used internally to hold key entry information.
+     */
+    protected static final class KeyEntry {
+
+        protected final int index;
+        protected final int length;
+        protected String name;
+
+        public KeyEntry(int index, int length) {
+            this.index = index;
+            this.length = length;
+        }
+
+        public KeyEntry setKey(String key) {
+            this.name = key;
+            return this;
+        }
     }
 
     /**
