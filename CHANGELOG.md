@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.25.5](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.4...0.25.5) - 2022-01-28
+
+- mysql 8 also puts JSON keys in any damn place it likes
+
 ## [0.25.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.3...0.25.4) - 2021-10-13
 
 - add debugging info to eof exception
