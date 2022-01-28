@@ -22,7 +22,6 @@ import com.github.shyiko.mysql.binlog.CountDownEventListener;
 import com.github.shyiko.mysql.binlog.MysqlOnetimeServer;
 import com.github.shyiko.mysql.binlog.TraceEventListener;
 import com.github.shyiko.mysql.binlog.TraceLifecycleListener;
-import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.QueryEventData;
@@ -143,6 +142,28 @@ public class JsonBinaryValueIntegrationTest {
         List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
         Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
         assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace("\"ab\":\"970785C8-C299\"", ""));
+
+        client.unregisterEventListener(capturingEventListener);
+    }
+
+    @Test
+    public void testMysql8JsonRemovePartialUpdateWithHolesAndSparseKeys() throws Exception {
+        CapturingEventListener capturingEventListener = new CapturingEventListener();
+        client.registerEventListener(capturingEventListener);
+        String json = "{\"17fc9889474028063990914001f6854f6b8b5784\":\"test_field_for_remove_fields_behaviour_2\",\"1f3a2ea5bc1f60258df20521bee9ac636df69a3a\":{\"currency\":\"USD\"},\"4f4d99a438f334d7dbf83a1816015b361b848b3b\":{\"currency\":\"USD\"},\"9021162291be72f5a8025480f44bf44d5d81d07c\":\"test_field_for_remove_fields_behaviour_3_will_be_removed\",\"9b0ed11532efea688fdf12b28f142b9eb08a80c5\":{\"currency\":\"USD\"},\"e65ad0762c259b05b4866f7249eabecabadbe577\":\"test_field_for_remove_fields_behaviour_1_updated\",\"ff2c07edcaa3e987c23fb5cc4fe860bb52becf00\":{\"currency\":\"USD\"}}";
+        master.execute("DROP TABLE IF EXISTS json_test", "create table json_test (j JSON)",
+                "INSERT INTO json_test VALUES ('" + json + "')",
+                "UPDATE json_test SET j = JSON_REMOVE(j, '$.\"17fc9889474028063990914001f6854f6b8b5784\"')");
+        capturingEventListener.waitFor(WriteRowsEventData.class, 1, DEFAULT_TIMEOUT);
+        capturingEventListener.waitFor(UpdateRowsEventData.class, 1, DEFAULT_TIMEOUT);
+        List<WriteRowsEventData> events = capturingEventListener.getEvents(WriteRowsEventData.class);
+        Serializable[] insertData = events.iterator().next().getRows().get(0);
+        assertEquals(JsonBinary.parseAsString((byte[]) insertData[0]), json);
+
+        List<UpdateRowsEventData> updateEvents = capturingEventListener.getEvents(UpdateRowsEventData.class);
+        Serializable[] updateData = updateEvents.iterator().next().getRows().get(0).getValue();
+        assertEquals(JsonBinary.parseAsString((byte[]) updateData[0]), json.replace(
+                "\"17fc9889474028063990914001f6854f6b8b5784\":\"test_field_for_remove_fields_behaviour_2\",", ""));
 
         client.unregisterEventListener(capturingEventListener);
     }
