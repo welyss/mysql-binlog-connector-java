@@ -221,13 +221,10 @@ mvn # shows how to build, test, etc. project
 
 ## Deployment
 
-First:
-http://maven.apache.org/guides/mini/guide-encryption.html
+setup your settings.xml to have a "central" entry.
 
-Secondly:
 ```
-    export OSS_SONATYPE_ORG_USERNAME=username
-    export OSS_SONATYPE_ORG_PASSWORD={encryptedpasswordJF!#$flkj}
+mvn deploy
 ```
 
 ## Contributing
