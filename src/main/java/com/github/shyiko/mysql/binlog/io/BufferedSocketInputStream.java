@@ -60,6 +60,10 @@ public class BufferedSocketInputStream extends FilterInputStream {
             }
             offset = 0;
             limit = in.read(buffer, 0, buffer.length);
+            
+            if (limit == -1) {
+                return -1;
+            }
         }
         int bytesRemainingInBuffer = Math.min(len, limit - offset);
         System.arraycopy(buffer, offset, b, off, bytesRemainingInBuffer);
