@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.25.6](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.5...0.25.6) - 2022-04-14
+
+- stop crashing in an inopportune place
+
 ## [0.25.5](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.4...0.25.5) - 2022-01-28
 
 - mysql 8 also puts JSON keys in any damn place it likes
