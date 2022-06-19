@@ -51,6 +51,12 @@ public class TableMapEventMetadataDeserializer {
             if (fieldType == null) {
                 throw new IOException("Unsupported table metadata field type " + code);
             }
+            if (MetadataFieldType.UNKNOWN_METADATA_FIELD_TYPE.equals(fieldType)) {
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine("Received metadata field of unknown type");
+                }
+                continue;
+            }
 
             int fieldLength = inputStream.readPackedInteger();
 
@@ -92,11 +98,6 @@ public class TableMapEventMetadataDeserializer {
                     result.setEnumAndSetColumnCharsets(readIntegers(inputStream));
                 case VISIBILITY:
                     result.setVisibility(readBooleanList(inputStream, nColumns));
-                    break;
-                case UNKNOWN_METADATA_FIELD_TYPE:
-                    if (logger.isLoggable(Level.FINE)) {
-                        logger.fine("Received metadata field of unknown type");
-                    }
                     break;
                 default:
                     inputStream.enterBlock(remainingBytes);
