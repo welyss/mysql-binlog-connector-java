@@ -47,6 +47,13 @@ public class BinaryLogFileReaderIntegrationTest {
     }
 
     @Test
+    public void testNextEventCompressed() throws Exception {
+        BinaryLogFileReader reader = new BinaryLogFileReader(
+            new FileInputStream("src/test/resources/mysql-bin.compressed"));
+        readAll(reader, 5);
+    }
+
+    @Test
     public void testChecksumNONE() throws Exception {
         EventDeserializer eventDeserializer = new EventDeserializer();
         BinaryLogFileReader reader = new BinaryLogFileReader(
