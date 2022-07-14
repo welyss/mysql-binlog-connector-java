@@ -192,7 +192,17 @@ public enum EventType {
     /**
      * Prepared XA transaction terminal event similar to XID except that it is specific to XA transaction.
      */
-    XA_PREPARE;
+    XA_PREPARE,
+    /**
+     Extension of UPDATE_ROWS_EVENT, allowing partial values according
+     to binlog_row_value_options.
+     */
+    PARTIAL_UPDATE_ROWS_EVENT,
+    /**
+     * Generated when 'binlog_transaction_compression' is set to 'ON'.
+     * It encapsulates all the events of a transaction in a Zstd compressed payload.
+     */
+    TRANSACTION_PAYLOAD;
 
     public static boolean isRowMutation(EventType eventType) {
         return EventType.isWrite(eventType) ||
