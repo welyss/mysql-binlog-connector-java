@@ -178,4 +178,15 @@ public class BinaryLogClientTest {
         }
     }
 
+    @Test
+    public void testDeadlockyCode() throws IOException, InterruptedException {
+        final BinaryLogClient binaryLogClient = new BinaryLogClient("localhost", 3306, "root", "123456");
+        binaryLogClient.setHeartbeatInterval(10000);
+        binaryLogClient.setKeepAlive(true);
+        binaryLogClient.setKeepAliveInterval(2000);
+
+        binaryLogClient.connect();
+
+        Thread.sleep(10000000);
+    }
 }

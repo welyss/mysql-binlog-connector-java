@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.26.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.6...0.26.0) - 2022-07-15
+
+- Compressed binlogs, thank you Somesh Malviya
+- fix crash on unknown field type
+
+# Changelog
+
 ## [0.25.6](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.5...0.25.6) - 2022-04-14
 
 - stop crashing in an inopportune place

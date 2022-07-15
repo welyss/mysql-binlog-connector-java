@@ -780,6 +780,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                             // expected in case of disconnect
                         }
                         if (threadExecutor.isShutdown()) {
+                            logger.info("threadExecutor is shut down, terminating keepalive thread");
                             return;
                         }
                         boolean connectionLost = false;
