@@ -794,17 +794,13 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                             }
                         }
                         if (connectionLost) {
-                            if (logger.isLoggable(Level.INFO)) {
-                                logger.info("Trying to restore lost connection to " + hostname + ":" + port);
-                            }
+                            logger.info("Keepalive: Trying to restore lost connection to " + hostname + ":" + port);
                             try {
                                 terminateConnect();
                                 connect(connectTimeout);
                             } catch (Exception ce) {
-                                if (logger.isLoggable(Level.WARNING)) {
-                                    logger.warning("Failed to restore connection to " + hostname + ":" + port +
-                                        ". Next attempt in " + keepAliveInterval + "ms");
-                                }
+                                logger.warning("keepalive: Failed to restore connection to " + hostname + ":" + port +
+                                    ". Next attempt in " + keepAliveInterval + "ms");
                             }
                         }
                     }
@@ -1179,19 +1175,16 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     }
 
     private void terminateKeepAliveThread() {
-        try {
-            keepAliveThreadExecutorLock.lock();
-            ExecutorService keepAliveThreadExecutor = this.keepAliveThreadExecutor;
-            if (keepAliveThreadExecutor == null) {
-                return;
-            }
-            keepAliveThreadExecutor.shutdownNow();
-            while (!awaitTerminationInterruptibly(keepAliveThreadExecutor,
-                Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-                // ignore
-            }
-        } finally {
-            keepAliveThreadExecutorLock.unlock();
+        keepAliveThreadExecutorLock.lock();
+        ExecutorService keepAliveThreadExecutor = this.keepAliveThreadExecutor;
+        if (keepAliveThreadExecutor == null) {
+            return;
+        }
+        keepAliveThreadExecutor.shutdownNow();
+        keepAliveThreadExecutorLock.unlock();
+        while (!awaitTerminationInterruptibly(keepAliveThreadExecutor,
+            Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+            // ignore
         }
     }
 
