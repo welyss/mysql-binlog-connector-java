@@ -1175,13 +1175,16 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     }
 
     private void terminateKeepAliveThread() {
-        keepAliveThreadExecutorLock.lock();
-        ExecutorService keepAliveThreadExecutor = this.keepAliveThreadExecutor;
-        if (keepAliveThreadExecutor == null) {
-            return;
+        try {
+            keepAliveThreadExecutorLock.lock();
+            ExecutorService keepAliveThreadExecutor = this.keepAliveThreadExecutor;
+            if ( keepAliveThreadExecutor == null ) {
+                return;
+            }
+            keepAliveThreadExecutor.shutdownNow();
+        } finally {
+            keepAliveThreadExecutorLock.unlock();
         }
-        keepAliveThreadExecutor.shutdownNow();
-        keepAliveThreadExecutorLock.unlock();
         while (!awaitTerminationInterruptibly(keepAliveThreadExecutor,
             Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
             // ignore
