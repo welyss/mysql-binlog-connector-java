@@ -1,4 +1,7 @@
 # Changelog
+## [0.26.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.26.0...0.26.1) - 2022-07-18
+
+- fix deadlock with disconnect and keepalive thread.
 
 ## [0.26.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.6...0.26.0) - 2022-07-15
 
