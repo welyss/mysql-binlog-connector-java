@@ -10,11 +10,11 @@ import java.io.IOException;
 /**
  * Mariadb GTID_LIST_EVENT Fields
  * <pre>
- *  uint<4> Number of GTIDs
+ *  uint4 Number of GTIDs
  *  GTID[0]
- *      uint<4> Replication Domain ID
- *      uint<4> Server_ID
- *      uint<8> GTID sequence ...
+ *      uint4 Replication Domain ID
+ *      uint4 Server_ID
+ *      uint8 GTID sequence ...
  * GTID[n]
  * </pre>
  *

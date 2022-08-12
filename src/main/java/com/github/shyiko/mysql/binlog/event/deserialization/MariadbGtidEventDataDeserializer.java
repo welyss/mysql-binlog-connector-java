@@ -8,14 +8,14 @@ import java.io.IOException;
 /**
  * Mariadb GTID_EVENT Fields
  * <pre>
- *     uint<8> GTID sequence
- *     uint<4> Replication Domain ID
- *     uint<1> Flags
+ *     uint8 GTID sequence
+ *     uint4 Replication Domain ID
+ *     uint1 Flags
  *
- * 	if flag & FL_GROUP_COMMIT_ID
- * 	    uint<8> commit_id
+ * 	if flag &amp; FL_GROUP_COMMIT_ID
+ * 	    uint8 commit_id
  * 	else
- * 	    uint<6> 0
+ * 	    uint6 0
  * </pre>
  *
  * @author <a href="mailto:winger2049@gmail.com">Winger</a>

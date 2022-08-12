@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Mariadb ANNOTATE_ROWS_EVENT Fields
  * <pre>
- *  string<EOF> The SQL statement (not null-terminated)
+ *  string&lt;EOF&gt; The SQL statement (not null-terminated)
  * </pre>
  *
  * @author <a href="mailto:winger2049@gmail.com">Winger</a>
