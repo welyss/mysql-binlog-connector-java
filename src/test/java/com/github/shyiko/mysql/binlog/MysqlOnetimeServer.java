@@ -249,8 +249,13 @@ public class MysqlOnetimeServer {
 	}
 
     public static MysqlVersion getVersion() {
-        String[] parts = getVersionString().split("\\.");
-        return new MysqlVersion(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]));
+        String version = getVersionString();
+        if ( version == "mariadb") {
+            return new MysqlVersion(0, 0, true);
+        } else {
+            String[] parts = version.split("\\.");
+            return new MysqlVersion(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]), false);
+        }
     }
 
 	private static String getVersionString() {

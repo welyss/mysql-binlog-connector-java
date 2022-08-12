@@ -3,6 +3,8 @@ package com.github.shyiko.mysql.binlog;
 import com.github.shyiko.mysql.binlog.event.AnnotateRowsEventData;
 import com.github.shyiko.mysql.binlog.event.MariadbGtidEventData;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
+import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.sql.ResultSet;
@@ -16,13 +18,17 @@ import static org.testng.AssertJUnit.assertNotNull;
 /**
  * @author <a href="mailto:winger2049@gmail.com">Winger</a>
  */
-public class MariadbBinaryLogClientIntegrationTest {
+public class MariadbBinaryLogClientIntegrationTest extends BinaryLogClientIntegrationTest {
 
+    MysqlOnetimeServer primaryServer;
     protected BinaryLogClientIntegrationTest.MySQLConnection master;
 
     @Test
     public void testMariadbUseGTIDAndAnnotateRowsEvent() throws Exception {
-        master = new BinaryLogClientIntegrationTest.MySQLConnection("127.0.0.1", 3306, "root", "");
+        if ( !mysqlVersion.isMaria )
+            throw new SkipException("not maria");
+
+
         master.execute(new BinaryLogClientIntegrationTest.Callback<Statement>() {
             @Override
             public void execute(Statement statement) throws SQLException {
@@ -45,7 +51,7 @@ public class MariadbBinaryLogClientIntegrationTest {
         });
 
         CountDownEventListener eventListener;
-        MariadbBinaryLogClient client = new MariadbBinaryLogClient("127.0.0.1", 3306, "root", "123456");
+        MariadbBinaryLogClient client = new MariadbBinaryLogClient(master.hostname(), master.port(), master.username(), master.password());
         client.setGtidSet(currentGtidPos[0]);
         client.setUseSendAnnotateRowsEvent(true);
 
