@@ -250,7 +250,7 @@ public class MysqlOnetimeServer {
 
     public static MysqlVersion getVersion() {
         String version = getVersionString();
-        if ( version == "mariadb") {
+        if ( version.equals("mariadb") ) {
             return new MysqlVersion(0, 0, true);
         } else {
             String[] parts = version.split("\\.");
