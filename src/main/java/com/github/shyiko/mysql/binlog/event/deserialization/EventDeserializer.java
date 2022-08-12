@@ -22,6 +22,7 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.FormatDescriptionEventData;
 import com.github.shyiko.mysql.binlog.event.LRUCache;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.shyiko.mysql.binlog.event.TransactionPayloadEventData;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 
 import java.io.IOException;
@@ -126,6 +127,8 @@ public class EventDeserializer {
             new MariadbGtidEventDataDeserializer());
         eventDataDeserializers.put(EventType.MARIADB_GTID_LIST,
             new MariadbGtidListEventDataDeserializer());
+        eventDataDeserializers.put(EventType.TRANSACTION_PAYLOAD,
+                new TransactionPayloadEventDataDeserializer());
     }
 
     public void setEventDataDeserializer(EventType eventType, EventDataDeserializer eventDataDeserializer) {
@@ -233,6 +236,9 @@ public class EventDeserializer {
             case TABLE_MAP:
                 eventData = deserializeTableMapEventData(inputStream, eventHeader);
                 break;
+            case TRANSACTION_PAYLOAD:
+                eventData = deserializeTransactionPayloadEventData(inputStream, eventHeader);
+                break;
             default:
                 EventDataDeserializer eventDataDeserializer = getEventDataDeserializer(eventHeader.getEventType());
                 eventData = deserializeEventData(inputStream, eventHeader, eventDataDeserializer);
@@ -274,6 +280,26 @@ public class EventDeserializer {
             }
         } catch (IOException e) {
             throw new EventDataDeserializationException(eventHeader, e);
+        }
+        return eventData;
+    }
+
+    public EventData deserializeTransactionPayloadEventData(ByteArrayInputStream inputStream, EventHeader eventHeader)
+        throws IOException {
+        EventDataDeserializer eventDataDeserializer = eventDataDeserializers.get(EventType.TRANSACTION_PAYLOAD);
+        EventData eventData = deserializeEventData(inputStream, eventHeader, eventDataDeserializer);
+        TransactionPayloadEventData transactionPayloadEventData = (TransactionPayloadEventData) eventData;
+
+        /**
+         * Handling for TABLE_MAP events withing the transaction payload event. This is to ensure that for the table map
+         * events within the transaction payload, the target table id and the event gets added to the
+         * tableMapEventByTableId map. This is map is later used while deserializing rows.
+         */
+        for (Event event : transactionPayloadEventData.getUncompressedEvents()) {
+            if (event.getHeader().getEventType() == EventType.TABLE_MAP && event.getData() != null) {
+                TableMapEventData tableMapEvent = (TableMapEventData) event.getData();
+                tableMapEventByTableId.put(tableMapEvent.getTableId(), tableMapEvent);
+            }
         }
         return eventData;
     }

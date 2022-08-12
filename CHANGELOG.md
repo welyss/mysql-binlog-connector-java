@@ -1,4 +1,30 @@
 # Changelog
+## [0.26.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.26.0...0.26.1) - 2022-07-18
+
+- fix deadlock with disconnect and keepalive thread.
+
+## [0.26.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.6...0.26.0) - 2022-07-15
+
+- Compressed binlogs, thank you Somesh Malviya
+- fix crash on unknown field type
+
+# Changelog
+
+## [0.25.6](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.5...0.25.6) - 2022-04-14
+
+- stop crashing in an inopportune place
+
+## [0.25.5](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.4...0.25.5) - 2022-01-28
+
+- mysql 8 also puts JSON keys in any damn place it likes
+
+## [0.25.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.3...0.25.4) - 2021-10-13
+
+- add debugging info to eof exception
+
+## [0.25.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.2...0.25.3) - 2021-07-29
+
+- support mysql 8's invisible columns
 
 ## [0.25.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.25.1...0.25.2) - 2021-06-25
 

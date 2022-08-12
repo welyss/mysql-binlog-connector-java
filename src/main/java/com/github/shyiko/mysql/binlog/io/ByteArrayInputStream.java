@@ -29,6 +29,7 @@ public class ByteArrayInputStream extends InputStream {
     private Integer peek;
     private Integer pos, markPosition;
     private int blockLength = -1;
+    private int initialBlockLength = -1;
 
     public ByteArrayInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
@@ -110,7 +111,10 @@ public class ByteArrayInputStream extends InputStream {
         while (remaining != 0) {
             int read = read(bytes, offset + length - remaining, remaining);
             if (read == -1) {
-                throw new EOFException();
+                throw new EOFException(
+                    String.format("Failed to read remaining %d of %d bytes from position %d. Block length: %d. Initial block length: %d.",
+                        remaining, length, pos, blockLength, initialBlockLength)
+                );
             }
             remaining -= read;
         }
@@ -206,7 +210,7 @@ public class ByteArrayInputStream extends InputStream {
             peek = null;
         }
         if (result == -1) {
-            throw new EOFException();
+            throw new EOFException(String.format("Failed to read next byte from position %d", this.pos));
         }
         this.pos += 1;
         return result;
@@ -273,6 +277,7 @@ public class ByteArrayInputStream extends InputStream {
 
     public void enterBlock(int length) {
         this.blockLength = length < -1 ? -1 : length;
+        this.initialBlockLength = length;
     }
 
     public void skipToTheEndOfTheBlock() throws IOException {

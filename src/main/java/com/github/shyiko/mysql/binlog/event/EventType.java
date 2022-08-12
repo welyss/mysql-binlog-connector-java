@@ -195,6 +195,18 @@ public enum EventType {
     XA_PREPARE(38),
 
     /**
+     Extension of UPDATE_ROWS_EVENT, allowing partial values according
+     to binlog_row_value_options.
+     */
+    PARTIAL_UPDATE_ROWS_EVENT(39),
+
+    /**
+     * Generated when 'binlog_transaction_compression' is set to 'ON'.
+     * It encapsulates all the events of a transaction in a Zstd compressed payload.
+     */
+    TRANSACTION_PAYLOAD(40),
+
+    /**
      * MariaDB Support Events
      *
      * @see <a href="https://mariadb.com/kb/en/replication-protocol/">Replication Protocol</a> for the original doc.
