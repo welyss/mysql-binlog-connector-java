@@ -70,6 +70,7 @@ public class MysqlOnetimeServer {
 
 		ProcessBuilder pb = new ProcessBuilder(
 			dir + "/src/test/onetimeserver",
+            "--debug",
 			"--mysql-version=" + getVersionString(),
 			"--log-slave-updates",
 			"--log-bin=master",
