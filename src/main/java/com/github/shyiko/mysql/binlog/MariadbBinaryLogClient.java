@@ -1,7 +1,12 @@
 package com.github.shyiko.mysql.binlog;
 
+import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventHeader;
 import com.github.shyiko.mysql.binlog.event.EventType;
+import com.github.shyiko.mysql.binlog.event.MariadbGtidEventData;
+import com.github.shyiko.mysql.binlog.event.MariadbGtidListEventData;
 import com.github.shyiko.mysql.binlog.event.deserialization.AnnotateRowsEventDataDeserializer;
+import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.MariadbGtidEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.MariadbGtidListEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.network.protocol.command.Command;
@@ -73,6 +78,29 @@ public class MariadbBinaryLogClient extends BinaryLogClient {
         ensureEventDataDeserializer(EventType.ANNOTATE_ROWS, AnnotateRowsEventDataDeserializer.class);
         ensureEventDataDeserializer(EventType.MARIADB_GTID, MariadbGtidEventDataDeserializer.class);
         ensureEventDataDeserializer(EventType.MARIADB_GTID_LIST, MariadbGtidListEventDataDeserializer.class);
+    }
+
+    @Override
+    protected void updateGtidSet(Event event) {
+        synchronized (gtidSetAccessLock) {
+            if (gtidSet == null) {
+                return;
+            }
+        }
+        EventHeader eventHeader = event.getHeader();
+        switch(eventHeader.getEventType()) {
+            case MARIADB_GTID:
+                MariadbGtidEventData mariadbGtidEventData = (MariadbGtidEventData) EventDeserializer.EventDataWrapper.internal(event.getData());
+                mariadbGtidEventData.setServerId(eventHeader.getServerId());
+                gtid = mariadbGtidEventData.toString();
+                break;
+            case MARIADB_GTID_LIST:
+                MariadbGtidListEventData mariadbGtidListEventData = (MariadbGtidListEventData) EventDeserializer.EventDataWrapper.internal(event.getData());
+                gtid = mariadbGtidListEventData.getMariaGTIDSet().toString();
+                break;
+            default:
+                super.updateGtidSet(event);
+        }
     }
 
     public boolean isUseSendAnnotateRowsEvent() {

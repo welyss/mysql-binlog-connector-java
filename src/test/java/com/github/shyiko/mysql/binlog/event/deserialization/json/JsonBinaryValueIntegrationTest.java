@@ -19,10 +19,10 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogClientIntegrationTest;
 import com.github.shyiko.mysql.binlog.CapturingEventListener;
 import com.github.shyiko.mysql.binlog.CountDownEventListener;
+import com.github.shyiko.mysql.binlog.MySQLConnection;
 import com.github.shyiko.mysql.binlog.MysqlOnetimeServer;
 import com.github.shyiko.mysql.binlog.TraceEventListener;
 import com.github.shyiko.mysql.binlog.TraceLifecycleListener;
-import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.QueryEventData;
@@ -65,7 +65,7 @@ public class JsonBinaryValueIntegrationTest {
 
     private final TimeZone timeZoneBeforeTheTest = TimeZone.getDefault();
 
-    private BinaryLogClientIntegrationTest.MySQLConnection master;
+    private MySQLConnection master;
     private BinaryLogClient client;
     private CountDownEventListener eventListener;
 
@@ -78,7 +78,7 @@ public class JsonBinaryValueIntegrationTest {
         MysqlOnetimeServer masterServer = new MysqlOnetimeServer();
         masterServer.boot();
 
-        master = new BinaryLogClientIntegrationTest.MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
+        master = new MySQLConnection("127.0.0.1", masterServer.getPort(), "root", "");
 
         client = new BinaryLogClient(master.hostname(), master.port(), master.username(), master.password());
         client.setServerId(client.getServerId() - 1); // avoid clashes between BinaryLogClient instances

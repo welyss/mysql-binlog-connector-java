@@ -4,7 +4,7 @@ import com.github.shyiko.mysql.binlog.event.AnnotateRowsEventData;
 import com.github.shyiko.mysql.binlog.event.MariadbGtidEventData;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import org.testng.SkipException;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.sql.ResultSet;
@@ -18,17 +18,15 @@ import static org.testng.AssertJUnit.assertNotNull;
 /**
  * @author <a href="mailto:winger2049@gmail.com">Winger</a>
  */
-public class MariadbBinaryLogClientIntegrationTest extends BinaryLogClientIntegrationTest {
-
-    MysqlOnetimeServer primaryServer;
-    protected BinaryLogClientIntegrationTest.MySQLConnection master;
+public class MariadbBinaryLogClientIntegrationTest extends AbstractIntegrationTest {
+    @BeforeMethod
+    public void checkMariaDB() throws Exception {
+        if ( !mysqlVersion.isMaria )
+            throw new SkipException("not maria");
+    }
 
     @Test
     public void testMariadbUseGTIDAndAnnotateRowsEvent() throws Exception {
-        if ( !mysqlVersion.isMaria )
-            throw new SkipException("not maria");
-
-
         master.execute(new BinaryLogClientIntegrationTest.Callback<Statement>() {
             @Override
             public void execute(Statement statement) throws SQLException {

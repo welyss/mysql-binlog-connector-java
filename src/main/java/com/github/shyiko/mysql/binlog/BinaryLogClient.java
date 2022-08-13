@@ -139,7 +139,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     protected final Object gtidSetAccessLock = new Object();
     private boolean gtidSetFallbackToPurged;
     private boolean useBinlogFilenamePositionInGtidMode;
-    private String gtid;
+    protected String gtid;
     private boolean tx;
 
     private EventDeserializer eventDeserializer = new EventDeserializer();
@@ -1010,7 +1010,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         return result;
     }
 
-    protected void updateClientBinlogFilenameAndPosition(Event event) {
+    private void updateClientBinlogFilenameAndPosition(Event event) {
         EventHeader eventHeader = event.getHeader();
         EventType eventType = eventHeader.getEventType();
         if (eventType == EventType.ROTATE) {
@@ -1040,15 +1040,6 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             case GTID:
                 GtidEventData gtidEventData = (GtidEventData) EventDataWrapper.internal(event.getData());
                 gtid = gtidEventData.getGtid();
-                break;
-            case MARIADB_GTID:
-                MariadbGtidEventData mariadbGtidEventData =  (MariadbGtidEventData) EventDataWrapper.internal(event.getData());
-                mariadbGtidEventData.setServerId(eventHeader.getServerId());
-                gtid = mariadbGtidEventData.toString();
-                break;
-            case MARIADB_GTID_LIST:
-                MariadbGtidListEventData mariadbGtidListEventData =  (MariadbGtidListEventData) EventDataWrapper.internal(event.getData());
-                gtid = mariadbGtidListEventData.getMariaGTIDSet().toString();
                 break;
             case XID:
                 commitGtid();
