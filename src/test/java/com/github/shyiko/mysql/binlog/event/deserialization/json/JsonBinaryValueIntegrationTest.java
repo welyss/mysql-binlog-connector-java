@@ -493,7 +493,7 @@ public class JsonBinaryValueIntegrationTest {
     public void testScalarTimestamp() throws Exception {
         if ( isMaria )
             throw new SkipException("");
-        
+
         // timestamp literals are interpreted by MySQL as DATETIME values
         assertEquals(writeAndCaptureJSON("CAST(TIMESTAMP'2015-01-15 23:24:25' AS JSON)"),
             "\"2015-01-15 23:24:25\"");

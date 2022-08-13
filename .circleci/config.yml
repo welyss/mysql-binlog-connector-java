@@ -26,7 +26,7 @@ jobs:
         type: string
     environment:
       MYSQL_VERSION: "<< parameters.mysql >>"
-      JAVA_TOOL_OPTIONS: "-Xmx250m"
+      JAVA_TOOL_OPTIONS: "-Xmx250m -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
     steps:
       - checkout
       - restore_cache:
