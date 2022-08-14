@@ -22,6 +22,9 @@ public class MariadbBinaryLogClientIntegrationTest extends AbstractIntegrationTe
     @Override
     protected MysqlOnetimeServerOptions getOptions() {
         MysqlOnetimeServerOptions options = super.getOptions();
+        if ( !mysqlVersion.isMaria )
+            return options;
+
         if ( options.extraParams == null )
             options.extraParams = "";
         else

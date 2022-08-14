@@ -784,7 +784,6 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             }
         }
         channel.write(dumpBinaryLogCommand);
-
     }
 
     protected void requestBinaryLogStreamMaria(long serverId) throws IOException {
@@ -793,6 +792,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             if (this.gtidEnabled) {
                 channel.write(new QueryCommand("SET @mariadb_slave_capability=4"));
                 checkError(channel.read());
+                logger.info(gtidSet.toString());
                 channel.write(new QueryCommand("SET @slave_connect_state = '" + gtidSet.toString() + "'"));
                 checkError(channel.read());
                 channel.write(new QueryCommand("SET @slave_gtid_strict_mode = 0"));
