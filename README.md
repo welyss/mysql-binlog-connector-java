@@ -84,13 +84,15 @@ kick off from a specific filename or position, use `client.setBinlogFilename(fil
 > `client.connect()` is blocking (meaning that client will listen for events in the current thread).
 `client.connect(timeout)`, on the other hand, spawns a separate thread.
 
-> Note difference between MariaDB and MySQL
-```
-BinaryLogClient client = new MariadbBinaryLogClient("hostname", 3306, "username", "password");
-// ... as same as BinaryLogClient
-```
-> `client.setGtidSet(gtid)` meaning that client kick off from a specific gtid, MariaDB also support.
-> `client.setUseSendAnnotateRowsEvent(true)` meaning that client will send annotate rows events(describe the query which caused the row event), and 'false' by default
+
+#### MariaDB
+
+The stock BinaryLogClient works out of the box with MariaDB but there's two differences;
+
+One, MariaDB's GTIDs are different.  They're still strings but parse differently.
+Two, Maria can send the ANNOTATE_ROWS events which allows you to recover the SQL used to generate rows in row-based replication.
+
+See https://mariadb.com/kb/en/annotate_rows_log_event/ and `client.setUseSendAnnotateRowsEvent(true)` 
 
 #### Controlling event deserialization
 
