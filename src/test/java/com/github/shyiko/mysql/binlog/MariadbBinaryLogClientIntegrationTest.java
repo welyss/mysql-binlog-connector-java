@@ -19,6 +19,18 @@ import static org.testng.AssertJUnit.assertNotNull;
  * @author <a href="mailto:winger2049@gmail.com">Winger</a>
  */
 public class MariadbBinaryLogClientIntegrationTest extends AbstractIntegrationTest {
+    @Override
+    protected MysqlOnetimeServerOptions getOptions() {
+        MysqlOnetimeServerOptions options = super.getOptions();
+        if ( options.extraParams == null )
+            options.extraParams = "";
+        else
+            options.extraParams += " ";
+
+        options.extraParams += "--binlog-annotate-row-events";
+        return options;
+    }
+
     @BeforeMethod
     public void checkMariaDB() throws Exception {
         if ( !mysqlVersion.isMaria )
@@ -49,7 +61,7 @@ public class MariadbBinaryLogClientIntegrationTest extends AbstractIntegrationTe
         });
 
         CountDownEventListener eventListener;
-        MariadbBinaryLogClient client = new MariadbBinaryLogClient(master.hostname(), master.port(), master.username(), master.password());
+        BinaryLogClient client = new BinaryLogClient(master.hostname(), master.port(), master.username(), master.password());
         client.setGtidSet(currentGtidPos[0]);
         client.setUseSendAnnotateRowsEvent(true);
 
@@ -71,13 +83,12 @@ public class MariadbBinaryLogClientIntegrationTest extends AbstractIntegrationTe
 
         try {
             eventListener.reset();
-            client.connect();
+            client.connect(5000);
 
             eventListener.waitFor(MariadbGtidEventData.class, 1, TimeUnit.SECONDS.toMillis(4));
             String gtidSet = client.getGtidSet();
             assertNotNull(gtidSet);
 
-            eventListener.reset();
             eventListener.waitFor(AnnotateRowsEventData.class, 1, TimeUnit.SECONDS.toMillis(4));
             gtidSet = client.getGtidSet();
             assertNotEquals(currentGtidPos[0], gtidSet);

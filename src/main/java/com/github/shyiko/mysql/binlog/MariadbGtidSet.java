@@ -1,6 +1,7 @@
 package com.github.shyiko.mysql.binlog;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Mariadb Global Transaction ID
@@ -25,6 +26,12 @@ public class MariadbGtidSet extends GtidSet {
                 map.put(mariaGtid.getDomainId(), mariaGtid);
             }
         }
+    }
+
+    static Pattern MARIA_GTID_PATTERN = Pattern.compile("^\\d+-\\d+-\\d+");
+
+    public static boolean isMariaGtidSet(String gtidSet) {
+        return MARIA_GTID_PATTERN.matcher(gtidSet).find();
     }
 
     @Override
