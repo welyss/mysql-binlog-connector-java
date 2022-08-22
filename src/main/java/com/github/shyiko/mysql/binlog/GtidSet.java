@@ -167,6 +167,10 @@ public class GtidSet {
         return join(gtids, ",");
     }
 
+    public String toSeenString() {
+        return this.toString();
+    }
+
     private static String join(Collection<?> o, String delimiter) {
         if (o.isEmpty()) {
             return "";

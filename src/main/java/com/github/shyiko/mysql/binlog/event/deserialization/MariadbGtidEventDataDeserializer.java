@@ -27,6 +27,7 @@ public class MariadbGtidEventDataDeserializer implements EventDataDeserializer<M
         MariadbGtidEventData event = new MariadbGtidEventData();
         event.setSequence(inputStream.readLong(8));
         event.setDomainId(inputStream.readInteger(4));
+        event.setFlags(inputStream.readInteger(1));
         // Flags ignore
         return event;
     }
