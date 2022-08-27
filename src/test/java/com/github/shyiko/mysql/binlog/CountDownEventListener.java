@@ -91,9 +91,10 @@ public class CountDownEventListener implements BinaryLogClient.EventListener {
         AtomicInteger counter = getCounter(countersByType, eventType);
 
         synchronized (counter) {
-            if (counter.get() < numberOfEvents) {
+            counter.set(counter.get() - numberOfEvents);
+            if (counter.get() < 0) {
                 counter.wait(timeoutInMilliseconds);
-                if (counter.get() < numberOfEvents) {
+                if (counter.get() < 0) {
                     throw new TimeoutException("Received " + (numberOfEvents + counter.get()) + " " +
                         eventType.name() + " event(s) instead of expected " + numberOfEvents);
                 }
