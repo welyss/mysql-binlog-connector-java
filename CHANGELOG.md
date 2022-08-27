@@ -1,4 +1,12 @@
 # Changelog
+## [0.27.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.26.1...0.27.0) - 2022-09-27
+
+- Add "official" MariaDB support.  @wingerx started this worked and @ivapiv bugged me until it was
+  done, thanks all.  This includes:
+- MariaDB GTID support
+- support for the ANNOTATE_ROWS_EVENTS
+- MariaDB detection in getMariaDB()
+
 ## [0.26.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.26.0...0.26.1) - 2022-07-18
 
 - fix deadlock with disconnect and keepalive thread.
