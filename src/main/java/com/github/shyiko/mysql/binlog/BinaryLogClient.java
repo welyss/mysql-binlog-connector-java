@@ -788,10 +788,15 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
     protected void requestBinaryLogStreamMaria(long serverId) throws IOException {
         Command dumpBinaryLogCommand;
+
+        /*
+            https://jira.mariadb.org/browse/MDEV-225
+         */
+        channel.write(new QueryCommand("SET @mariadb_slave_capability=1"));
+        checkError(channel.read());
+
         synchronized (gtidSetAccessLock) {
             if (this.gtidEnabled) {
-                channel.write(new QueryCommand("SET @mariadb_slave_capability=4"));
-                checkError(channel.read());
                 logger.info(gtidSet.toString());
                 channel.write(new QueryCommand("SET @slave_connect_state = '" + gtidSet.toString() + "'"));
                 checkError(channel.read());
