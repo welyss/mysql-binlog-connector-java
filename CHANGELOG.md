@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.0...0.27.1) - 2022-09-28
+
+- fix a bug around the capability that we send maria
+
 ## [0.27.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.26.1...0.27.0) - 2022-09-27
 
 - Add "official" MariaDB support.  @wingerx started this worked and @ivapiv bugged me until it was
