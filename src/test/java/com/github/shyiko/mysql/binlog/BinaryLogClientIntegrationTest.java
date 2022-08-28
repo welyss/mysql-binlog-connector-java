@@ -806,7 +806,7 @@ public class BinaryLogClientIntegrationTest extends AbstractIntegrationTest {
                         statement.execute("flush logs");
                     }
                 });
-                eventListener.waitFor(EventType.QUERY, 1, DEFAULT_TIMEOUT);
+                eventListener.waitForAtLeast(EventType.QUERY, 1, DEFAULT_TIMEOUT);
                 eventListener.waitFor(EventType.ROTATE, 3, DEFAULT_TIMEOUT); /* 2 with timestamp 0 */
                 eventListener.waitFor(ByteArrayEventData.class, 5, DEFAULT_TIMEOUT);
             } finally {
