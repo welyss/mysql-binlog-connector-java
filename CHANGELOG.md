@@ -1,4 +1,9 @@
 # Changelog
+## [0.27.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.3...0.27.2) - 2022-09-25
+
+- pass use-annotate-rows through non-gtid mariadb connections
+
+# Changelog
 ## [0.27.2](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.2...0.27.1) - 2022-09-16
 
 - Fix the maria gtid detection regex to avoid erroneously detecting mysql gtids as maria
