@@ -806,7 +806,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                 checkError(channel.read());
                 dumpBinaryLogCommand = new DumpBinaryLogCommand(serverId, "", 0L, isUseSendAnnotateRowsEvent());
             } else {
-                dumpBinaryLogCommand = new DumpBinaryLogCommand(serverId, binlogFilename, binlogPosition);
+                dumpBinaryLogCommand = new DumpBinaryLogCommand(serverId, binlogFilename, binlogPosition, isUseSendAnnotateRowsEvent());
             }
         }
         channel.write(dumpBinaryLogCommand);
