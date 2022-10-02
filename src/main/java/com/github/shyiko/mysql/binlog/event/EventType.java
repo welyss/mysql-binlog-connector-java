@@ -212,6 +212,7 @@ public enum EventType {
      * @see <a href="https://mariadb.com/kb/en/replication-protocol/">Replication Protocol</a> for the original doc.
      */
     ANNOTATE_ROWS(160), //
+    BINLOG_CHECKPOINT(161),
     MARIADB_GTID(162),
     MARIADB_GTID_LIST(163);
 
