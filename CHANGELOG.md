@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.4...0.27.3) - 2022-11-01
+
+- move mariadb_slave_capability back to 4
+
 ## [0.27.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.3...0.27.2) - 2022-09-25
 
 - pass use-annotate-rows through non-gtid mariadb connections
