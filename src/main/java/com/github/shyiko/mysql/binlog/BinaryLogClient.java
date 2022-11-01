@@ -792,7 +792,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         /*
             https://jira.mariadb.org/browse/MDEV-225
          */
-        channel.write(new QueryCommand("SET @mariadb_slave_capability=1"));
+        channel.write(new QueryCommand("SET @mariadb_slave_capability=4"));
         checkError(channel.read());
 
         synchronized (gtidSetAccessLock) {
