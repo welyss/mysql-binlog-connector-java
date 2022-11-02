@@ -125,6 +125,8 @@ public class EventDeserializer {
             new AnnotateRowsEventDataDeserializer());
         eventDataDeserializers.put(EventType.MARIADB_GTID,
             new MariadbGtidEventDataDeserializer());
+        eventDataDeserializers.put(EventType.BINLOG_CHECKPOINT,
+            new BinlogCheckpointEventDataDeserializer());
         eventDataDeserializers.put(EventType.MARIADB_GTID_LIST,
             new MariadbGtidListEventDataDeserializer());
         eventDataDeserializers.put(EventType.TRANSACTION_PAYLOAD,
