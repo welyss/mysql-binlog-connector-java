@@ -1,4 +1,8 @@
 # Changelog
+## [0.27.5](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.5...0.27.4) - 2022-11-01
+
+- add mariadb BINLOG_CHECKPOINT event 
+
 ## [0.27.4](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.27.4...0.27.3) - 2022-11-01
 
 - move mariadb_slave_capability back to 4
