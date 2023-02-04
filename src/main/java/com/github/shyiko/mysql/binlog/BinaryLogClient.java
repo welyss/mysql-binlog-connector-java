@@ -144,7 +144,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private boolean gtidSetFallbackToPurged;
     private boolean gtidEnabled = false;
     private boolean useBinlogFilenamePositionInGtidMode;
-    protected String gtid;
+    protected Object gtid;
     private boolean tx;
 
     private EventDeserializer eventDeserializer = new EventDeserializer();
@@ -1131,7 +1131,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         switch(eventHeader.getEventType()) {
             case GTID:
                 GtidEventData gtidEventData = (GtidEventData) EventDataWrapper.internal(event.getData());
-                gtid = gtidEventData.getGtid();
+                gtid = gtidEventData.getMySqlGtid();
                 break;
             case XID:
                 commitGtid();
@@ -1183,7 +1183,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private void commitGtid() {
         if (gtid != null) {
             synchronized (gtidSetAccessLock) {
-                gtidSet.add(gtid);
+                gtidSet.addGtid(gtid);
             }
         }
     }
