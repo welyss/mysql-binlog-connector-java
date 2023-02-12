@@ -15,12 +15,9 @@
  */
 package com.github.shyiko.mysql.binlog;
 
-import com.github.shyiko.mysql.binlog.event.QueryEventData;
-import com.github.shyiko.mysql.binlog.event.XidEventData;
+import com.github.shyiko.mysql.binlog.event.*;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.sql.ResultSet;
@@ -28,6 +25,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
@@ -126,4 +124,63 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
             client.connect(DEFAULT_TIMEOUT);
         }
     }
+
+
+    @Test
+    public void testGtidServerId() throws Exception {
+        master.execute("CREATE TABLE if not exists foo (i int)");
+
+        final String[] expectedServerId = new String[1];
+        master.query("select @@server_uuid", new Callback<ResultSet>() {
+            @Override
+            public void execute(ResultSet rs) throws SQLException {
+                rs.next();
+                expectedServerId[0] = rs.getString(1);
+            }
+        });
+
+        final String[] actualServerId = new String[1];
+
+        EventDeserializer eventDeserializer = new EventDeserializer();
+        try {
+            client.disconnect();
+            final BinaryLogClient clientWithKeepAlive = new BinaryLogClient(slave.hostname(), slave.port(),
+                slave.username(), slave.password());
+
+            clientWithKeepAlive.setGtidSet("");
+            clientWithKeepAlive.registerEventListener(eventListener);
+
+
+            clientWithKeepAlive.registerEventListener(new BinaryLogClient.EventListener() {
+                @Override
+                public void onEvent(Event event) {
+                    if (event.getHeader().getEventType() == EventType.GTID) {
+                        actualServerId[0] = ((GtidEventData) event.getData()).getMySqlGtid().getServerId().toString();
+                    }
+                }
+            });
+            clientWithKeepAlive.setEventDeserializer(eventDeserializer);
+            try {
+                eventListener.reset();
+                clientWithKeepAlive.connect(DEFAULT_TIMEOUT);
+
+                master.execute(new Callback<Statement>() {
+                    @Override
+                    public void execute(Statement statement) throws SQLException {
+                        statement.execute("INSERT INTO foo set i = 2");
+                    }
+                });
+
+                eventListener.waitFor(XidEventData.class, 1, TimeUnit.SECONDS.toMillis(4));
+                assertEquals(actualServerId[0], expectedServerId[0]);
+
+
+            } finally {
+                clientWithKeepAlive.disconnect();
+            }
+        } finally {
+            client.connect(DEFAULT_TIMEOUT);
+        }
+    }
+
 }

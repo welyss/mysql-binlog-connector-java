@@ -17,8 +17,8 @@ public class MysqlGtidEventDataDeserializerTest {
         GtidEventData data = deserializer.deserialize(new ByteArrayInputStream(
             new byte[]{
                 0x03, //flags
-                (byte) 0xe6, 0x11, 0x16, 0x2c, 0x50, 0x78, (byte) 0xbc, 0x24, // sourceId leastSignificantBits little endian
-                0x02, 0x00, 0x11, (byte) 0xac, 0x42, 0x02, 0x73, (byte) 0xa0, //sourceId mostSignificantBits little endian
+                0x24, (byte) 0xbc, 0x78, 0x50, 0x2c, 0x16, 0x11, (byte) 0xe6, // sourceId mostSignificantBits big endian
+                (byte) 0xa0, 0x73, 0x02, 0x42, (byte) 0xac, 0x11, 0x00, 0x02, // sourceId leastSignificantBits big endian
                 (byte) 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // sequence little endian
             }
         ));

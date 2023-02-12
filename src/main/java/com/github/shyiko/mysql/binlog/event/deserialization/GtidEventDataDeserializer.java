@@ -29,16 +29,24 @@ public class GtidEventDataDeserializer implements EventDataDeserializer<GtidEven
     @Override
     public GtidEventData deserialize(ByteArrayInputStream inputStream) throws IOException {
         byte flags = (byte) inputStream.readInteger(1);
-        long sourceIdLeastSignificantBits = inputStream.readLong(8);
-        long sourceIdMostSignificantBits = inputStream.readLong(8);
+        long sourceIdMostSignificantBits = readLongBigEndian(inputStream);
+        long sourceIdLeastSignificantBits = readLongBigEndian(inputStream);
         long transactionId = inputStream.readLong(8);
 
         return new GtidEventData(
             new MySqlGtid(
-                new UUID(sourceIdLeastSignificantBits, sourceIdMostSignificantBits),
+                new UUID(sourceIdMostSignificantBits, sourceIdLeastSignificantBits),
                 transactionId
             ),
             flags
         );
+    }
+
+    private static long readLongBigEndian(ByteArrayInputStream input) throws IOException {
+        long result = 0;
+        for (int i = 0; i < 8; ++i) {
+            result = ((result << 8) | (input.read() & 0xff));
+        }
+        return result;
     }
 }
