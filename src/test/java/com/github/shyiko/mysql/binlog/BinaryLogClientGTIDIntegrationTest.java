@@ -149,7 +149,6 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
                 public void onEvent(Event event) {
                     if (event.getHeader().getEventType() == EventType.GTID) {
                         actualServerId[0] = ((GtidEventData) event.getData()).getMySqlGtid().getServerId().toString();
-                        System.out.println("actualServerId = " + actualServerId[0]);
                     }
                 }
             });
