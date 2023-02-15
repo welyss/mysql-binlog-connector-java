@@ -64,14 +64,7 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
     public void testGTIDAdvances() throws Exception {
         master.execute("CREATE TABLE if not exists foo (i int)");
 
-        final String[] initialGTIDSet = new String[1];
-        master.query("show master status", new Callback<ResultSet>() {
-            @Override
-            public void execute(ResultSet rs) throws SQLException {
-                rs.next();
-                initialGTIDSet[0] = rs.getString("Executed_Gtid_Set");
-            }
-        });
+        String initialGTIDSet = getExecutedGtidSet(master);
 
         EventDeserializer eventDeserializer = new EventDeserializer();
         try {
@@ -79,7 +72,7 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
             final BinaryLogClient clientWithKeepAlive = new BinaryLogClient(slave.hostname(), slave.port(),
                 slave.username(), slave.password());
 
-            clientWithKeepAlive.setGtidSet(initialGTIDSet[0]);
+            clientWithKeepAlive.setGtidSet(initialGTIDSet);
             clientWithKeepAlive.registerEventListener(eventListener);
             clientWithKeepAlive.setEventDeserializer(eventDeserializer);
             try {
@@ -130,6 +123,8 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
     public void testGtidServerId() throws Exception {
         master.execute("CREATE TABLE if not exists foo (i int)");
 
+        String initialGTIDSet = getExecutedGtidSet(master);
+
         final String[] expectedServerId = new String[1];
         master.query("select @@server_uuid", new Callback<ResultSet>() {
             @Override
@@ -144,12 +139,10 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
         EventDeserializer eventDeserializer = new EventDeserializer();
         try {
             client.disconnect();
-            final BinaryLogClient clientWithKeepAlive = new BinaryLogClient(slave.hostname(), slave.port(),
-                slave.username(), slave.password());
+            final BinaryLogClient clientWithKeepAlive = new BinaryLogClient(master.hostname(), master.port(),
+                master.username(), master.password());
 
-            clientWithKeepAlive.setGtidSet("");
-            clientWithKeepAlive.registerEventListener(eventListener);
-
+            clientWithKeepAlive.setGtidSet(initialGTIDSet);
 
             clientWithKeepAlive.registerEventListener(new BinaryLogClient.EventListener() {
                 @Override
@@ -159,6 +152,7 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
                     }
                 }
             });
+            clientWithKeepAlive.registerEventListener(eventListener);
             clientWithKeepAlive.setEventDeserializer(eventDeserializer);
             try {
                 eventListener.reset();
@@ -171,7 +165,7 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
                     }
                 });
 
-                eventListener.waitFor(XidEventData.class, 1, TimeUnit.SECONDS.toMillis(4));
+                eventListener.waitForAtLeast(EventType.GTID, 1, TimeUnit.SECONDS.toMillis(4));
                 assertEquals(actualServerId[0], expectedServerId[0]);
 
 
@@ -181,6 +175,18 @@ public class BinaryLogClientGTIDIntegrationTest extends BinaryLogClientIntegrati
         } finally {
             client.connect(DEFAULT_TIMEOUT);
         }
+    }
+
+    private String getExecutedGtidSet(MySQLConnection master) throws SQLException {
+        final String[] initialGTIDSet = new String[1];
+        master.query("show master status", new Callback<ResultSet>() {
+            @Override
+            public void execute(ResultSet rs) throws SQLException {
+                rs.next();
+                initialGTIDSet[0] = rs.getString("Executed_Gtid_Set");
+            }
+        });
+        return initialGTIDSet[0];
     }
 
 }
