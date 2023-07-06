@@ -276,6 +276,14 @@ public class BinaryLogClientIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    public void testDeserializationOfYEARAndSignedness() throws Exception {
+        assertEquals(writeAndCaptureRow(
+                "int(20) NOT NULL AUTO_INCREMENT, `c2` year, `c3` int, `c4` int, `c5` int, `c6` int, `c7` int, `c8` int, `c9` int, c10 char(10), PRIMARY KEY (`column_`)",
+                "1, 2, 3, 4, 5, 6, 7, 8, 9, ''"),
+                new Serializable[]{1});
+    }
+
+    @Test
     public void testDeserializationOfSTRING() throws Exception {
         assertEquals(writeAndCaptureRow("char", "'q'"), new Serializable[]{"q".getBytes("UTF-8")});
         assertEquals(writeAndCaptureRow("char", "'Â'"), new Serializable[]{"Â".getBytes("UTF-8")});
