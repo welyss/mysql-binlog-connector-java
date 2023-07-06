@@ -1,4 +1,8 @@
 # Changelog
+## [0.28.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.28.1...0.28.0) - 2023-07-07
+
+- Fix a signedness bug, see #108
+
 ## [0.28.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.28.0...0.27.6) - 2023-02-14
 
 - GTID performance improvements, thanks Janick Reynders
