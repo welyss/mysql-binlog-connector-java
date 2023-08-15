@@ -6,7 +6,9 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
@@ -27,10 +29,14 @@ public class TableMapEventMetadataDeserializerTest {
      */
     @Test
     public void deserialize() throws IOException {
-        byte[] metadataIncludingUnknownFieldType = {1, 2, 0, -128, 2, 9, 83, 6, 63, 7, 63, 8, 63, 9, 63};
+        byte[] metadataIncludingUnknownFieldType = {1, 2, -1, 2, 9, 83, 6, 63, 7, 63, 8, 63, 9, 63};
         TableMapEventMetadataDeserializer deserializer = new TableMapEventMetadataDeserializer();
+        // suppose there Columns idx likes
+        // col 0, 2, 4, 6, 7, 9, 11, 13 unsigned
+        // col 1 ,3 ..., 22 signed or non numeric
+        List<Integer> numericIndexWithAllColumn = Arrays.asList(0, 2, 4, 6, 7, 9, 11, 13);
         TableMapEventMetadata tableMapEventMetadata =
-            deserializer.deserialize(new ByteArrayInputStream(metadataIncludingUnknownFieldType), 23, 8, Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7)); // suppose there numeric Columns Idx are 0, 1, 2, 3, 4, 5, 6, 7
+            deserializer.deserialize(new ByteArrayInputStream(metadataIncludingUnknownFieldType), 23, 8, numericIndexWithAllColumn);
 
         Map<Integer, Integer> expectedCharsetCollations = new LinkedHashMap<>();
         expectedCharsetCollations.put(6, 63);
@@ -38,7 +44,11 @@ public class TableMapEventMetadataDeserializerTest {
         expectedCharsetCollations.put(8, 63);
         expectedCharsetCollations.put(9, 63);
 
+        BitSet expectAllColumnBitSet = new BitSet();
+        for(int i=0; i< numericIndexWithAllColumn.size(); i++)expectAllColumnBitSet.set(numericIndexWithAllColumn.get(i));
+
         assertEquals(tableMapEventMetadata.getDefaultCharset().getDefaultCharsetCollation(), 83);
         assertEquals(tableMapEventMetadata.getDefaultCharset().getCharsetCollations(), expectedCharsetCollations);
+        assertEquals(tableMapEventMetadata.getSignedness(), expectAllColumnBitSet);
     }
 }
