@@ -113,8 +113,8 @@ public class TableMapEventMetadataDeserializer {
     }
 
     private static BitSet convertColumnOrder(BitSet numericOrderBitSet, List<Integer> numericColumIdxList) {
-        // case SIGNEDNESS The order of the index in the packet is only the index between the numeric_columns.
-        // So we need to map the index to the index in the all columns.
+        // Case SIGNEDNESS The order of indices in the Inputstream corresponds to the order of numeric columns
+        // So we need to map the index to all columns index (include non numeric type columns)
         Map<Integer, Integer> mappingColumnOrderMap = new HashMap<>();
 
         for (int numericColumnOrder = 0; numericColumnOrder < numericColumIdxList.size();
