@@ -36,7 +36,10 @@ public class TableMapEventMetadataDeserializer {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public TableMapEventMetadata deserialize(ByteArrayInputStream inputStream, int nColumns, int nNumericColumns) throws IOException {
+    public TableMapEventMetadata deserialize(ByteArrayInputStream inputStream, int nColumns,
+                                             int nNumericColumns, List<Integer> numericColumIdxList)
+        throws IOException {
+
         int remainingBytes = inputStream.available();
         if (remainingBytes <= 0) {
             return null;
@@ -65,7 +68,8 @@ public class TableMapEventMetadataDeserializer {
 
             switch (fieldType) {
                 case SIGNEDNESS:
-                    result.setSignedness(readBooleanList(inputStream, nNumericColumns));
+                    result.setSignedness(
+                        convertColumnOrder(readBooleanList(inputStream, nNumericColumns), numericColumIdxList));
                     break;
                 case DEFAULT_CHARSET:
                     result.setDefaultCharset(readDefaultCharset(inputStream));
@@ -106,6 +110,26 @@ public class TableMapEventMetadataDeserializer {
             remainingBytes -= fieldLength;
         }
         return result;
+    }
+
+    private static BitSet convertColumnOrder(BitSet numericOrderBitSet, List<Integer> numericColumIdxList) {
+        // case SIGNEDNESS The order of the index in the packet is only the index between the numeric_columns.
+        // So we need to map the index to the index in the all columns.
+        Map<Integer, Integer> mappingColumnOrderMap = new HashMap<>();
+
+        for (int numericColumnOrder = 0; numericColumnOrder < numericColumIdxList.size();
+             numericColumnOrder++) {
+            int allColumnIndex = numericColumIdxList.get(numericColumnOrder);
+            mappingColumnOrderMap.put(numericColumnOrder, allColumnIndex);
+        }
+
+        BitSet columnOrderBitSet = new BitSet();
+        for (int i = 0; i < numericOrderBitSet.length(); i++) {
+            int numericColumnOrder = numericOrderBitSet.nextSetBit(i);
+            int allColumnIndex = mappingColumnOrderMap.get(numericColumnOrder);
+            columnOrderBitSet.set(allColumnIndex);
+        }
+        return columnOrderBitSet;
     }
 
     private static BitSet readBooleanList(ByteArrayInputStream inputStream, int length) throws IOException {

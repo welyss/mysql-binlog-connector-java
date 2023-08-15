@@ -5,6 +5,7 @@ import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class TableMapEventMetadataDeserializerTest {
         byte[] metadataIncludingUnknownFieldType = {1, 2, 0, -128, 2, 9, 83, 6, 63, 7, 63, 8, 63, 9, 63};
         TableMapEventMetadataDeserializer deserializer = new TableMapEventMetadataDeserializer();
         TableMapEventMetadata tableMapEventMetadata =
-            deserializer.deserialize(new ByteArrayInputStream(metadataIncludingUnknownFieldType), 23, 8);
+            deserializer.deserialize(new ByteArrayInputStream(metadataIncludingUnknownFieldType), 23, 8, Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7)); // suppose there numeric Columns Idx are 0, 1, 2, 3, 4, 5, 6, 7
 
         Map<Integer, Integer> expectedCharsetCollations = new LinkedHashMap<>();
         expectedCharsetCollations.put(6, 63);

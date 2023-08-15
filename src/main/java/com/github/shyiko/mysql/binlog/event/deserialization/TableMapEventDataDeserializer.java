@@ -20,6 +20,8 @@ import com.github.shyiko.mysql.binlog.event.TableMapEventMetadata;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:stanley.shyiko@gmail.com">Stanley Shyiko</a>
@@ -47,13 +49,35 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
             metadata = metadataDeserializer.deserialize(
                 new ByteArrayInputStream(inputStream.read(metadataLength)),
                 eventData.getColumnTypes().length,
-                numericColumnCount(eventData.getColumnTypes())
+                numericColumnCount(eventData.getColumnTypes()),
+                numericColumnIndex(eventData.getColumnTypes())
             );
         }
         eventData.setEventMetadata(metadata);
         return eventData;
     }
 
+    private List<Integer> numericColumnIndex(byte[] types){
+        ArrayList<Integer> numericColumnIndexList = new ArrayList<>();
+        for (int i = 0; i < types.length; i++) {
+            switch (ColumnType.byCode(types[i] & 0xff)) {
+                case TINY:
+                case SHORT:
+                case INT24:
+                case LONG:
+                case LONGLONG:
+                case NEWDECIMAL:
+                case FLOAT:
+                case DOUBLE:
+                case YEAR:
+                    numericColumnIndexList.add(i);
+                    break;
+                default:
+                    break;
+            }
+        }
+        return numericColumnIndexList;
+    }
     private int numericColumnCount(byte[] types) {
         int count = 0;
         for (int i = 0; i < types.length; i++) {
