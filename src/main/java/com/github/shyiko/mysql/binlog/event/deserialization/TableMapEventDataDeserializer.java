@@ -58,7 +58,7 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
     }
 
     private List<Integer> numericColumnIndex(byte[] types) {
-        ArrayList<Integer> numericColumnIndexList = new ArrayList<>();
+        List<Integer> numericColumnIndexList = new ArrayList<>();
         for (int i = 0; i < types.length; i++) {
             switch (ColumnType.byCode(types[i] & 0xff)) {
                 case TINY:
