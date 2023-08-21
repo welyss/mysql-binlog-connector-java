@@ -57,7 +57,7 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
         return eventData;
     }
 
-    private List<Integer> numericColumnIndex(byte[] types){
+    private List<Integer> numericColumnIndex(byte[] types) {
         ArrayList<Integer> numericColumnIndexList = new ArrayList<>();
         for (int i = 0; i < types.length; i++) {
             switch (ColumnType.byCode(types[i] & 0xff)) {
@@ -78,6 +78,7 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
         }
         return numericColumnIndexList;
     }
+
     private int numericColumnCount(byte[] types) {
         int count = 0;
         for (int i = 0; i < types.length; i++) {
@@ -103,7 +104,7 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
     private int[] readMetadata(ByteArrayInputStream inputStream, byte[] columnTypes) throws IOException {
         int[] metadata = new int[columnTypes.length];
         for (int i = 0; i < columnTypes.length; i++) {
-            switch(ColumnType.byCode(columnTypes[i] & 0xFF)) {
+            switch (ColumnType.byCode(columnTypes[i] & 0xFF)) {
                 case FLOAT:
                 case DOUBLE:
                 case BLOB:

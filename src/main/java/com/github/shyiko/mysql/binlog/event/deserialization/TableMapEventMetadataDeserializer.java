@@ -69,7 +69,8 @@ public class TableMapEventMetadataDeserializer {
             switch (fieldType) {
                 case SIGNEDNESS:
                     result.setSignedness(
-                        convertColumnOrder(readBooleanList(inputStream, nNumericColumns), numericColumIdxList));
+                        convertColumnOrder(readBooleanList(inputStream, nNumericColumns), nColumns,
+                                           numericColumIdxList));
                     break;
                 case DEFAULT_CHARSET:
                     result.setDefaultCharset(readDefaultCharset(inputStream));
@@ -112,22 +113,21 @@ public class TableMapEventMetadataDeserializer {
         return result;
     }
 
-    private static BitSet convertColumnOrder(BitSet numericOrderBitSet, List<Integer> numericColumIdxList) {
+    private static BitSet convertColumnOrder(BitSet numericOrderBitSet, int nColumns,
+                                             List<Integer> numericColumIdxList) {
         // Case SIGNEDNESS The order of indices in the Inputstream corresponds to the order of numeric columns
-        // So we need to map the index to all columns index (include non numeric type columns)
-        Map<Integer, Integer> mappingColumnOrderMap = new HashMap<>();
-
-        for (int numericColumnOrder = 0; numericColumnOrder < numericColumIdxList.size();
-             numericColumnOrder++) {
-            int allColumnIndex = numericColumIdxList.get(numericColumnOrder);
-            mappingColumnOrderMap.put(numericColumnOrder, allColumnIndex);
-        }
+        // So we need to change the index to all columns index (include non numeric type columns)
 
         BitSet columnOrderBitSet = new BitSet();
-        for (int i = 0; i < numericOrderBitSet.length(); i++) {
-            int numericColumnOrder = numericOrderBitSet.nextSetBit(i);
-            int allColumnIndex = mappingColumnOrderMap.get(numericColumnOrder);
-            columnOrderBitSet.set(allColumnIndex);
+        int position = 0;
+        for (int columnIndex = 0; columnIndex < nColumns; columnIndex++) {
+            if (numericColumIdxList.contains(columnIndex)) {
+                if (numericOrderBitSet.get(position++)) {
+                    columnOrderBitSet.set(columnIndex);
+                }
+
+            }
+
         }
         return columnOrderBitSet;
     }
@@ -206,7 +206,8 @@ public class TableMapEventMetadataDeserializer {
         ENUM_AND_SET_DEFAULT_CHARSET(10),   // Charsets of ENUM and SET columns
         ENUM_AND_SET_COLUMN_CHARSET(11),    // Charsets of ENUM and SET columns
         VISIBILITY(12),                     // Column visibility (8.0.23 and newer)
-        UNKNOWN_METADATA_FIELD_TYPE(128);   // Returned with binlog-row-metadata=FULL from MySQL 8.0 in some cases
+        UNKNOWN_METADATA_FIELD_TYPE(
+            128);   // Returned with binlog-row-metadata=FULL from MySQL 8.0 in some cases
 
         private final int code;
 
@@ -214,7 +215,7 @@ public class TableMapEventMetadataDeserializer {
             this.code = code;
         }
 
-        public int getCode() { return code; }
+        public int getCode() {return code;}
 
         private static final Map<Integer, MetadataFieldType> INDEX_BY_CODE;
 
