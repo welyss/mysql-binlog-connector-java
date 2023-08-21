@@ -69,7 +69,7 @@ public class TableMapEventMetadataDeserializer {
             switch (fieldType) {
                 case SIGNEDNESS:
                     result.setSignedness(
-                        convertColumnOrder(readBooleanList(inputStream, nNumericColumns), nColumns,
+                        convertAllColumnOrder(readBooleanList(inputStream, nNumericColumns), nColumns,
                                            numericColumIdxList));
                     break;
                 case DEFAULT_CHARSET:
@@ -113,21 +113,19 @@ public class TableMapEventMetadataDeserializer {
         return result;
     }
 
-    private static BitSet convertColumnOrder(BitSet numericOrderBitSet, int nColumns,
+    private static BitSet convertAllColumnOrder(BitSet numericOrderBitSet, int nColumns,
                                              List<Integer> numericColumIdxList) {
         // Case SIGNEDNESS The order of indices in the Inputstream corresponds to the order of numeric columns
         // So we need to change the index to all columns index (include non numeric type columns)
-
         BitSet columnOrderBitSet = new BitSet();
         int position = 0;
         for (int columnIndex = 0; columnIndex < nColumns; columnIndex++) {
-            if (numericColumIdxList.contains(columnIndex)) {
-                if (numericOrderBitSet.get(position++)) {
-                    columnOrderBitSet.set(columnIndex);
-                }
-
+            if (!numericColumIdxList.contains(columnIndex)) {
+                continue;
             }
-
+            if (numericOrderBitSet.get(position++)) {
+                columnOrderBitSet.set(columnIndex);
+            }
         }
         return columnOrderBitSet;
     }
