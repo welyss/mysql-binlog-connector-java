@@ -48,8 +48,8 @@ public class TableMapEventMetadataDeserializerTest {
         expectedCharsetCollations.put(9, 63);
 
         // metadataIncludingUnknownFieldType[2] = 29
-        // bin 00011101
-        // 2, 3, 4, 5(hit), 6(hit), 7(hit), 8, 9(hit
+        // bin 00011101 (Numeric Column Order Byte)
+        // 2, 3, 4, 5(hit), 6(hit), 7(hit), 8, 9(hit)
         BitSet expectAllColumnBitSet = new BitSet();
         expectAllColumnBitSet.set(5);
         expectAllColumnBitSet.set(6);
@@ -59,6 +59,26 @@ public class TableMapEventMetadataDeserializerTest {
         assertEquals(tableMapEventMetadata.getDefaultCharset().getDefaultCharsetCollation(), 83);
         assertEquals(tableMapEventMetadata.getDefaultCharset().getCharsetCollations(),
                      expectedCharsetCollations);
+        assertEquals(tableMapEventMetadata.getSignedness(), expectAllColumnBitSet);
+    }
+
+    @Test
+    public void deserializeSignednessTest() throws IOException {
+        byte[] metadataIncludingSignedness = { 1, 1, -96};
+        TableMapEventMetadataDeserializer deserializer = new TableMapEventMetadataDeserializer();
+        // create table test( col1 int unsigned , col2 int, col3 varchar(30), col4 int unsigned)
+        List<Integer> numericIndexWithAllColumn = Arrays.asList(0, 1, 3);
+        TableMapEventMetadata tableMapEventMetadata =
+            deserializer.deserialize(new ByteArrayInputStream(metadataIncludingSignedness), 4, 3,
+                                     numericIndexWithAllColumn);
+
+        // metadataIncludingUnknownFieldType[2] = -96
+        // bin 10100000 (Numeric Column Order Byte)
+        // col1(hit), col2, col4(hit)
+        BitSet expectAllColumnBitSet = new BitSet();
+        expectAllColumnBitSet.set(0); // col1
+        expectAllColumnBitSet.set(3); // col4 we change Index 2 -> 3 from convertAllColumnOrder function
+
         assertEquals(tableMapEventMetadata.getSignedness(), expectAllColumnBitSet);
     }
 }
