@@ -35,7 +35,7 @@ public class OptionalMetaDataIntegrationTest extends AbstractIntegrationTest {
 
     @BeforeMethod
     public void beforeEachTest() throws Exception {
-        checkMysqlVersion();
+        //checkMysqlVersion();
         master.execute(new Callback<Statement>() {
             @Override
             public void execute(Statement statement) throws SQLException {

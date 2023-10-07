@@ -36,8 +36,7 @@ public class TableMapEventMetadataDeserializer {
 
     private final Logger logger = Logger.getLogger(getClass().getName());
 
-    public TableMapEventMetadata deserialize(ByteArrayInputStream inputStream, int nColumns,
-                                             int nNumericColumns, List<Integer> numericColumIdxList)
+    public TableMapEventMetadata deserialize(ByteArrayInputStream inputStream, int nColumns, byte[] columnTypes)
         throws IOException {
 
         int remainingBytes = inputStream.available();
@@ -68,9 +67,34 @@ public class TableMapEventMetadataDeserializer {
 
             switch (fieldType) {
                 case SIGNEDNESS:
-                    result.setSignedness(
-                        convertAllColumnOrder(readBooleanList(inputStream, nNumericColumns), nColumns,
-                                           numericColumIdxList));
+                    int numericColumns = 0;
+                    BitSet bitSet = new BitSet();
+                    for (int i = 0; i < columnTypes.length; i++) {
+                        switch (ColumnType.byCode(columnTypes[i] & 0xff)) {
+                            case TINY:
+                            case SHORT:
+                            case INT24:
+                            case LONG:
+                            case LONGLONG:
+                            case NEWDECIMAL:
+                            case FLOAT:
+                            case DOUBLE:
+                            case YEAR:
+                                numericColumns++;
+                                bitSet.set(i);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    BitSet signednessBitSet = readBooleanList(inputStream, numericColumns);
+                    BitSet finalBitSet = new BitSet();
+
+                    for ( int i = 0, j = 0; i < columnTypes.length; i++) {
+                        if ( bitSet.get(i) ) // if is numeric
+                            bitSet.set(i, signednessBitSet.get(j++)); // set signed-ness
+                    }
+                    result.setSignedness(bitSet);
                     break;
                 case DEFAULT_CHARSET:
                     result.setDefaultCharset(readDefaultCharset(inputStream));
@@ -113,22 +137,6 @@ public class TableMapEventMetadataDeserializer {
         return result;
     }
 
-    private static BitSet convertAllColumnOrder(BitSet numericOrderBitSet, int nColumns,
-                                             List<Integer> numericColumIdxList) {
-        // Case SIGNEDNESS The order of indices in the Inputstream corresponds to the order of numeric columns
-        // So we need to change the index to all columns index (include non numeric type columns)
-        BitSet columnOrderBitSet = new BitSet();
-        int position = 0;
-        for (int columnIndex = 0; columnIndex < nColumns; columnIndex++) {
-            if (!numericColumIdxList.contains(columnIndex)) {
-                continue;
-            }
-            if (numericOrderBitSet.get(position++)) {
-                columnOrderBitSet.set(columnIndex);
-            }
-        }
-        return columnOrderBitSet;
-    }
 
     private static BitSet readBooleanList(ByteArrayInputStream inputStream, int length) throws IOException {
         BitSet result = new BitSet();

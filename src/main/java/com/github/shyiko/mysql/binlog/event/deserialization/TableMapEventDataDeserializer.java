@@ -49,8 +49,7 @@ public class TableMapEventDataDeserializer implements EventDataDeserializer<Tabl
             metadata = metadataDeserializer.deserialize(
                 new ByteArrayInputStream(inputStream.read(metadataLength)),
                 eventData.getColumnTypes().length,
-                numericColumnCount(eventData.getColumnTypes()),
-                numericColumnIndex(eventData.getColumnTypes())
+                eventData.getColumnTypes()
             );
         }
         eventData.setEventMetadata(metadata);
