@@ -74,7 +74,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -177,6 +176,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
 
 
     private Boolean isMariaDB;
+    private int mariaDbSlaveCapability = 4;
 
     /**
      * Alias for BinaryLogClient("localhost", 3306, &lt;no schema&gt; = null, username, password).
@@ -537,6 +537,23 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     public void setUseSendAnnotateRowsEvent(boolean useSendAnnotateRowsEvent) {
         this.useSendAnnotateRowsEvent = useSendAnnotateRowsEvent;
     }
+
+    /**
+     * @return the configured MariaDB slave compatibility level, defaults to 4.
+     */
+    public int getMariaDbSlaveCapability() {
+        return mariaDbSlaveCapability;
+    }
+
+    /**
+     * Set the client's MariaDB slave compatibility level. This only applies when connecting to MariaDB.
+     *
+     * @param mariaDbSlaveCapability the expected compatibility level
+     */
+    public void setMariaDbSlaveCapability(int mariaDbSlaveCapability) {
+        this.mariaDbSlaveCapability = mariaDbSlaveCapability;
+    }
+
     /**
      * Connect to the replication stream. Note that this method blocks until disconnected.
      * @throws AuthenticationException if authentication fails
@@ -792,7 +809,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
         /*
             https://jira.mariadb.org/browse/MDEV-225
          */
-        channel.write(new QueryCommand("SET @mariadb_slave_capability=4"));
+        channel.write(new QueryCommand("SET @mariadb_slave_capability=" + mariaDbSlaveCapability));
         checkError(channel.read());
 
         synchronized (gtidSetAccessLock) {
