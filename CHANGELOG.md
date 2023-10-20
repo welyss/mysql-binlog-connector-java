@@ -1,4 +1,9 @@
 # Changelog
+## [0.28.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.28.3...0.28.1) - 2023-10-19
+
+- around patch around pulling column signed-ness
+- make mariadb_slave_compat field configurable
+
 ## [0.28.1](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.28.1...0.28.0) - 2023-07-07
 
 - Fix a signedness bug, see #108
