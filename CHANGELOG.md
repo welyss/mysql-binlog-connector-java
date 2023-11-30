@@ -1,4 +1,8 @@
 # Changelog
+## [0.29.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.29.0...0.28.3) - 2023-11-29
+
+- add support for mysql8 specific metadata
+
 ## [0.28.3](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.28.3...0.28.1) - 2023-10-19
 
 - around patch around pulling column signed-ness
