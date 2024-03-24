@@ -87,7 +87,7 @@ public class GtidEventDataDeserializer implements EventDataDeserializer<GtidEven
                 }
                 // Total transaction length (including this GTIDEvent), introduced in MySQL-8.0.2
                 if (inputStream.available() >= TRANSACTION_LENGTH_MIN_LENGTH) {
-                    transactionLength = inputStream.readPackedInteger();
+                    transactionLength = inputStream.readPackedLong();
                 }
                 immediateServerVersion = UNDEFINED_SERVER_VERSION;
                 originalServerVersion = UNDEFINED_SERVER_VERSION;
