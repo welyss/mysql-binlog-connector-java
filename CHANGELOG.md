@@ -1,4 +1,8 @@
 # Changelog
+## [0.29.1] - 2024-03-24
+
+- bug fixes for VERY long transactions
+
 ## [0.29.0](https://github.com/osheroff/mysql-binlog-connector-java/compare/0.29.0...0.28.3) - 2023-11-29
 
 - add support for mysql8 specific metadata
