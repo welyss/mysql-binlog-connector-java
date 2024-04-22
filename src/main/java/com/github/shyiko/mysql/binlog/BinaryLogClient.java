@@ -137,6 +137,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     private volatile long binlogPosition = 4;
     private volatile long connectionId;
     private SSLMode sslMode = SSLMode.DISABLED;
+    private boolean useNonGracefulDisconnect = false;
 
     protected GtidSet gtidSet;
     protected final Object gtidSetAccessLock = new Object();
@@ -247,6 +248,10 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
             throw new IllegalArgumentException("SSL mode cannot be NULL");
         }
         this.sslMode = sslMode;
+    }
+
+    public void setUseNonGracefulDisconnect(boolean useNonGracefulDisconnect) {
+        this.useNonGracefulDisconnect = useNonGracefulDisconnect;
     }
 
     public long getMasterServerId() {
@@ -891,7 +896,7 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
                         if (connectionLost) {
                             logger.info("Keepalive: Trying to restore lost connection to " + hostname + ":" + port);
                             try {
-                                terminateConnect();
+                                terminateConnect(useNonGracefulDisconnect);
                                 connect(connectTimeout);
                             } catch (Exception ce) {
                                 logger.warning("keepalive: Failed to restore connection to " + hostname + ":" + port +
@@ -1341,8 +1346,11 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     }
 
     private void terminateConnect() throws IOException {
+        terminateConnect(false);
+    }
+    private void terminateConnect(boolean force) throws IOException {
         do {
-            disconnectChannel();
+            disconnectChannel(force);
         } while (!tryLockInterruptibly(connectLock, 1000, TimeUnit.MILLISECONDS));
         connectLock.unlock();
     }
@@ -1356,8 +1364,14 @@ public class BinaryLogClient implements BinaryLogClientMXBean {
     }
 
     private void disconnectChannel() throws IOException {
+        disconnectChannel(false);
+    }
+    private void disconnectChannel(boolean force) throws IOException {
         connected = false;
         if (channel != null && channel.isOpen()) {
+            if (force) {
+                channel.setShouldUseSoLinger0();
+            }
             channel.close();
         }
     }
