@@ -66,8 +66,11 @@ import java.util.TimeZone;
  */
 public abstract class AbstractRowsEventDataDeserializer<T extends EventData> implements EventDataDeserializer<T> {
 
-    private static final int DIG_PER_DEC = 9;
-    private static final int[] DIG_TO_BYTES = {0, 1, 1, 2, 2, 3, 3, 4, 4, 4};
+	private static final int DIG_PER_DEC = 9;
+	private static final int[] DIG_TO_BYTES = { 0, 1, 1, 2, 2, 3, 3, 4, 4, 4 };
+	public static final long TIMEF_INT_OFS = 0x800000L;
+	public static final long TIMEF_OFS = 0x800000000000L;
+	private static char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
     private final Map<Long, TableMapEventData> tableMapEventByTableId;
 
@@ -288,33 +291,135 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         return timestamp != null ? new java.sql.Time(timestamp) : null;
     }
 
-    protected Serializable deserializeTimeV2(int meta, ByteArrayInputStream inputStream) throws IOException {
-        /*
-            (in big endian)
+	protected Serializable deserializeTimeV2(int meta, ByteArrayInputStream inputStream) throws IOException {
+		Serializable value = 0;
+		/*
+		 * TIME low-level memory and disk representation routines In-memory format: 1
+		 * bit sign (Used for sign, when on disk) 1 bit unused (Reserved for wider hour
+		 * range, e.g. for intervals) 10 bit hour (0-836) 6 bit minute (0-59) 6 bit
+		 * second (0-59) 24 bits microseconds (0-999999) Total: 48 bits = 6 bytes
+		 * Suhhhhhh.hhhhmmmm.mmssssss.ffffffff.ffffffff.ffffffff
+		 */
+		long intpart = 0;
+		int frac = 0;
+		long ltime = 0;
+		byte[] byteBuffer = new byte[0];
+		long intpartl = 0;
+		switch (meta) {
+		case 0:
+			byteBuffer = inputStream.read(3);
+			intpartl = ((byteBuffer[0] & 0xFF) << 16) | ((byteBuffer[1] & 0xFF) << 8) | (byteBuffer[2] & 0xFF);
+			intpart = intpartl - TIMEF_INT_OFS; // big-endian
+			ltime = intpart << 24;
+			break;
+		case 1:
+		case 2:
+			byteBuffer = inputStream.read(3);
+			intpartl = ((byteBuffer[0] & 0xFF) << 16) | ((byteBuffer[1] & 0xFF) << 8) | (byteBuffer[2] & 0xFF);
+			intpart = intpartl - TIMEF_INT_OFS;
+			frac = inputStream.read(1)[0] & 0xFF;
+			if (intpart < 0 && frac > 0) {
+				/*
+				 * Negative values are stored with reverse fractional part order, for binary
+				 * sort compatibility. Disk value intpart frac Time value Memory value 800000.00
+				 * 0 0 00:00:00.00 0000000000.000000 7FFFFF.FF -1 255 -00:00:00.01
+				 * FFFFFFFFFF.FFD8F0 7FFFFF.9D -1 99 -00:00:00.99 FFFFFFFFFF.F0E4D0 7FFFFF.00 -1
+				 * 0 -00:00:01.00 FFFFFFFFFF.000000 7FFFFE.FF -1 255 -00:00:01.01
+				 * FFFFFFFFFE.FFD8F0 7FFFFE.F6 -2 246 -00:00:01.10 FFFFFFFFFE.FE7960 Formula to
+				 * convert fractional part from disk format (now stored in "frac" variable) to
+				 * absolute value: "0x100 - frac". To reconstruct in-memory value, we shift to
+				 * the next integer value and then substruct fractional part.
+				 */
+				intpart++; /* Shift to the next integer value */
+				frac -= 0x100; /* -(0x100 - frac) */
+				// fraclong = frac * 10000;
+			}
+			frac = frac * 10000;
+			ltime = intpart << 24;
+			break;
+		case 3:
+		case 4:
+			byteBuffer = inputStream.read(3);
+			intpartl = ((byteBuffer[0] & 0xFF) << 16) | ((byteBuffer[1] & 0xFF) << 8) | (byteBuffer[2] & 0xFF);
+			intpart = intpartl - TIMEF_INT_OFS;
+			byteBuffer = inputStream.read(2);
+			frac = ((byteBuffer[0] & 0xFF) << 8) | (byteBuffer[1] & 0xFF);
+			if (intpart < 0 && frac > 0) {
+				/*
+				 * Fix reverse fractional part order: "0x10000 - frac". See comments for FSP=1
+				 * and FSP=2 above.
+				 */
+				intpart++; /* Shift to the next integer value */
+				frac -= 0x10000; /* -(0x10000-frac) */
+				// fraclong = frac * 100;
+			}
+			frac = frac * 100;
+			ltime = intpart << 24;
+			break;
+		case 5:
+		case 6:
+			byteBuffer = inputStream.read(6);
+			long beUlong48 = ((long) (byteBuffer[0] & 0xFF) << 40) | ((long) (byteBuffer[1] & 0xFF) << 32)
+					| ((long) (byteBuffer[2] & 0xFF) << 24) | ((long) (byteBuffer[3] & 0xFF) << 16)
+					| ((long) (byteBuffer[4] & 0xFF) << 8) | (byteBuffer[5] & 0xFF);
+			intpart = beUlong48 - TIMEF_OFS;
+			ltime = intpart;
+			frac = (int) (intpart % (1L << 24));
+			break;
+		default:
+			byteBuffer = inputStream.read(3);
+			intpart = ((byteBuffer[0] & 0xFF) << 16) | ((byteBuffer[1] & 0xFF) << 8)
+					| (byteBuffer[2] & 0xFF) - TIMEF_INT_OFS;
+			ltime = intpart << 24;
+			break;
+		}
 
-            1 bit sign (1= non-negative, 0= negative)
-            1 bit unused (reserved for future extensions)
-            10 bits hour (0-838)
-            6 bits minute (0-59)
-            6 bits second (0-59)
+		String second = null;
+		if (intpart == 0) {
+			second = frac < 0 ? "-00:00:00" : "00:00:00";
+		} else {
+			// 目前只记录秒，不处理us frac
+			// if (cal == null) cal = Calendar.getInstance();
+			// cal.clear();
+			// cal.set(70, 0, 1, (int) ((intpart >> 12) % (1 << 10)),
+			// (int) ((intpart >> 6) % (1 << 6)),
+			// (int) (intpart % (1 << 6)));
+			// value = new Time(cal.getTimeInMillis());
+			long ultime = Math.abs(ltime);
+			intpart = ultime >> 24;
+			// second = String.format("%s%02d:%02d:%02d",
+			// ltime >= 0 ? "" : "-",
+			// (int) ((intpart >> 12) % (1 << 10)),
+			// (int) ((intpart >> 6) % (1 << 6)),
+			// (int) (intpart % (1 << 6)));
 
-            (3 bytes in total)
+			StringBuilder builder = new StringBuilder(12);
+			if (ltime < 0) {
+				builder.append('-');
+			}
 
-            + fractional-seconds storage (size depends on meta)
-        */
-        long time = bigEndianLong(inputStream.read(3), 0, 3);
-        int fsp = deserializeFractionalSeconds(meta, inputStream);
-        Long timestamp = asUnixTime(1970, 1, 1,
-            bitSlice(time, 2, 10, 24),
-            bitSlice(time, 12, 6, 24),
-            bitSlice(time, 18, 6, 24),
-            fsp / 1000
-        );
-        if (deserializeDateAndTimeAsLong) {
-            return castTimestamp(timestamp, fsp);
-        }
-        return timestamp != null ? new java.sql.Time(timestamp) : null;
-    }
+			int d = (int) ((intpart >> 12) % (1 << 10));
+			if (d >= 100) {
+				builder.append(String.valueOf(d));
+			} else {
+				appendNumber2(builder, d);
+			}
+			builder.append(':');
+			appendNumber2(builder, (int) ((intpart >> 6) % (1 << 6)));
+			builder.append(':');
+			appendNumber2(builder, (int) (intpart % (1 << 6)));
+			second = builder.toString();
+		}
+
+		if (meta >= 1) {
+			String microSecond = usecondsToStr(Math.abs(frac), meta);
+			microSecond = microSecond.substring(0, meta);
+			value = second + '.' + microSecond;
+		} else {
+			value = second;
+		}
+		return value;
+	}
 
     protected Serializable deserializeTimestamp(ByteArrayInputStream inputStream) throws IOException {
         long timestamp = inputStream.readLong(4) * 1000;
@@ -521,6 +626,33 @@ public abstract class AbstractRowsEventDataDeserializer<T extends EventData> imp
         return result;
     }
 
+    public static void appendNumber2(StringBuilder builder, int d) {
+        if (d >= 10) {
+            builder.append(digits[(d / 10) % 10]).append(digits[d % 10]);
+        } else {
+            builder.append('0').append(digits[d]);
+        }
+    }
+
+    public static String usecondsToStr(int frac, int meta) {
+        String sec = String.valueOf(frac);
+        if (meta > 6) {
+            throw new IllegalArgumentException("unknow useconds meta : " + meta);
+        }
+
+        if (sec.length() < 6) {
+            StringBuilder result = new StringBuilder(6);
+            int len = 6 - sec.length();
+            for (; len > 0; len--) {
+                result.append('0');
+            }
+            result.append(sec);
+            sec = result.toString();
+        }
+
+        return sec.substring(0, meta);
+    }
+    
     /**
      * Class for working with Unix time.
      */
